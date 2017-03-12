@@ -41,6 +41,7 @@ import java.util.Locale;
 
 import upm.softwaredesign.uber.MainActivity;
 import upm.softwaredesign.uber.R;
+import upm.softwaredesign.uber.utilities.HttpManager;
 
 
 public class MapViewFragment extends Fragment implements OnMapReadyCallback,
@@ -118,7 +119,9 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
                             .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
                                 public void onClick(DialogInterface dialog, int whichButton) {
-                                    Toast.makeText(getActivity(), "You have requrested a cab!", Toast.LENGTH_SHORT).show();
+                                    //Toast.makeText(getActivity(), "You have requrested a cab!", Toast.LENGTH_SHORT).show();
+                                    HttpManager httpManager = new HttpManager("http://url.com", getActivity().getApplicationContext());
+                                    httpManager.sendPosition(startMarker.getPosition(), destinationMarker.getPosition());
                                 }})
                             .setNegativeButton(android.R.string.no, null).show();
                 } else {
