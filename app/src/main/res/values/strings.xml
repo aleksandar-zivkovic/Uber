@@ -3,6 +3,9 @@
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_login">Sign in</string>
 
+    <!--Strings related to Main activity-->
+    <string name="hint_search_destination">Where to?</string>
+
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password (optional)</string>
