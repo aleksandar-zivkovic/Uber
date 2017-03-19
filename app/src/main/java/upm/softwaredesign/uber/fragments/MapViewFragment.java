@@ -110,7 +110,7 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
 
         mFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(final View view) {
                 if (destinationMarker != null) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
                     builder.setTitle("Request a cab")
@@ -122,6 +122,18 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
                                     //Toast.makeText(getActivity(), "You have requrested a cab!", Toast.LENGTH_SHORT).show();
                                     HttpManager httpManager = new HttpManager("http://url.com", getActivity().getApplicationContext());
                                     httpManager.sendPosition(startMarker.getPosition(), destinationMarker.getPosition());
+                                    AlertDialog.Builder a_builder = new AlertDialog.Builder(view.getContext());
+                                    a_builder.setMessage("Your Request has sent to the nearby Cars!")
+                                            .setCancelable(false)
+                                            .setPositiveButton("GOT IT", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    dialog.cancel();
+                                                }
+                                            });
+                                    AlertDialog alert = a_builder.create();
+                                    alert.setTitle("REQUEST NOTIFICATION");
+                                    alert.show();
                                 }})
                             .setNegativeButton(android.R.string.no, null).show();
                 } else {
