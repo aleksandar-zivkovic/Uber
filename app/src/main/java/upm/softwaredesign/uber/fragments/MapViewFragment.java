@@ -2,6 +2,7 @@ package upm.softwaredesign.uber.fragments;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Fragment;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.location.Address;
@@ -19,6 +20,7 @@ import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -59,7 +61,10 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
     private Marker startMarker;
     private Marker destinationMarker;
 
+    private String mDestinationAddress;
+
     private FloatingActionButton mFloatingActionButton;
+    private EditText mDestinationAddressEditText;
 
     @Nullable
     @Override
@@ -81,6 +86,7 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
 
         mGoogleMap = gMap;
         mFloatingActionButton   = (FloatingActionButton) getActivity().findViewById(R.id.fab);
+        mDestinationAddressEditText = (EditText) getActivity().findViewById(R.id.destination_edit_text);
 
         if (ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED &&
@@ -101,16 +107,13 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
 
             @Override
             public void onMapClick(LatLng point) {
-                MarkerOptions destinationMarkerOptions = new MarkerOptions().position(new LatLng(point.latitude, point.longitude)).title("Destination");
-                if (destinationMarker != null)
-                    destinationMarker.remove();
-                destinationMarker = mGoogleMap.addMarker(destinationMarkerOptions);
+                changeDestinationLocation(point);
             }
         });
 
         mFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(final View view) {
                 if (destinationMarker != null) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
                     builder.setTitle("Request a cab")
@@ -122,12 +125,38 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
                                     //Toast.makeText(getActivity(), "You have requrested a cab!", Toast.LENGTH_SHORT).show();
                                     HttpManager httpManager = new HttpManager("http://url.com", getActivity().getApplicationContext());
                                     httpManager.sendPosition(startMarker.getPosition(), destinationMarker.getPosition());
+                                    AlertDialog.Builder a_builder = new AlertDialog.Builder(view.getContext());
+                                    a_builder.setMessage("Your Request has sent to the nearby Cars!")
+                                            .setCancelable(false)
+                                            .setPositiveButton("GOT IT", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    dialog.cancel();
+                                                }
+                                            });
+                                    AlertDialog alert = a_builder.create();
+                                    alert.setTitle("REQUEST NOTIFICATION");
+                                    alert.show();
                                 }})
                             .setNegativeButton(android.R.string.no, null).show();
                 } else {
                     Toast.makeText(getActivity(),"Tap on map to choose destination!",Toast.LENGTH_SHORT).show();
                 }
             }
+        });
+
+        mDestinationAddressEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+            // When focus is lost check that the text field has valid values.
+                if (!hasFocus) {
+                    String address = mDestinationAddressEditText.getText().toString();
+                    LatLng location = getLocationFromAddress(getActivity(), address);
+                    changeDestinationLocation(location); // TODO - this has to be given more work and checks
+                }
+            }
+
         });
 
 
@@ -236,5 +265,41 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
             e.printStackTrace();
         }
         return sPlace;
+    }
+
+    public LatLng getLocationFromAddress(Context context, String strAddress) {
+
+        Geocoder coder = new Geocoder(context);
+        List<Address> address;
+        LatLng p1 = null;
+
+        try {
+            // May throw an IOException
+            address = coder.getFromLocationName(strAddress, 5);
+            if (address == null) {
+                return null;
+            }
+            Address location = address.get(0);
+            location.getLatitude();
+            location.getLongitude();
+
+            p1 = new LatLng(location.getLatitude(), location.getLongitude() );
+
+        } catch (IOException ex) {
+
+            ex.printStackTrace();
+        }
+
+        return p1;
+    }
+
+    public void changeDestinationLocation(LatLng point) {
+        MarkerOptions destinationMarkerOptions = new MarkerOptions().position(new LatLng(point.latitude, point.longitude)).title("Destination");
+        if (destinationMarker != null)
+            destinationMarker.remove();
+        destinationMarker = mGoogleMap.addMarker(destinationMarkerOptions);
+
+        mDestinationAddress = getAddressByLatLong(point.latitude, point.longitude);
+        mDestinationAddressEditText.setText(mDestinationAddress);
     }
 }
