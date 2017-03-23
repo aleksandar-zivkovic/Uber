@@ -6,8 +6,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.location.Address;
+import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -33,6 +35,7 @@ import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -43,6 +46,7 @@ import java.util.Locale;
 
 import upm.softwaredesign.uber.MainActivity;
 import upm.softwaredesign.uber.R;
+import upm.softwaredesign.uber.utilities.Constants;
 import upm.softwaredesign.uber.utilities.HttpManager;
 
 
@@ -90,13 +94,9 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
 
         if (ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
-                        PackageManager.PERMISSION_GRANTED) {
-            mGoogleMap.setMyLocationEnabled(true);
-            mGoogleMap.getUiSettings().setMyLocationButtonEnabled(false);
+                ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    setUpMyLocation();
 
-            buildGoogleApiClient();
-            mGoogleApiClient.connect();
         } else {
             ActivityCompat.requestPermissions(getActivity(), new String[] {
                             Manifest.permission.ACCESS_FINE_LOCATION,
@@ -122,11 +122,10 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
                             .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
                                 public void onClick(DialogInterface dialog, int whichButton) {
-                                    //Toast.makeText(getActivity(), "You have requrested a cab!", Toast.LENGTH_SHORT).show();
-                                    HttpManager httpManager = new HttpManager("http://url.com", getActivity().getApplicationContext());
+                                    HttpManager httpManager = new HttpManager(Constants.REQUEST_TRIP_URL, getActivity());
                                     httpManager.sendPosition(startMarker.getPosition(), destinationMarker.getPosition());
                                     AlertDialog.Builder a_builder = new AlertDialog.Builder(view.getContext());
-                                    a_builder.setMessage("Your Request has sent to the nearby Cars!")
+                                    a_builder.setMessage("Your cab request has sent!")
                                             .setCancelable(false)
                                             .setPositiveButton("GOT IT", new DialogInterface.OnClickListener() {
                                                 @Override
@@ -167,18 +166,13 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
         switch (requestCode) {
             case 200: {
                 if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    mGoogleMap.setMyLocationEnabled(true);
-                    mGoogleMap.getUiSettings().setMyLocationButtonEnabled(false);
-
-                    buildGoogleApiClient();
-                    mGoogleApiClient.connect();
+                    setUpMyLocation();
                 }
             }
         }
     }
 
     protected synchronized void buildGoogleApiClient() {
-        Toast.makeText(getActivity(),"buildGoogleApiClient",Toast.LENGTH_SHORT).show();
         mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -188,7 +182,6 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        Toast.makeText(getActivity(),"onConnected",Toast.LENGTH_SHORT).show();
         Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if (mLastLocation != null) {
             //place marker at current position
@@ -211,18 +204,14 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
 
     @Override
     public void onConnectionSuspended(int i) {
-        Toast.makeText(getActivity(),"onConnectionSuspended",Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Toast.makeText(getActivity(),"onConnectionFailed",Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onLocationChanged(Location location) {
-        //place marker at current position
-        //mGoogleMap.clear();
         if (startMarker != null) {
             startMarker.remove();
         }
@@ -232,14 +221,6 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
         markerOptions.title("Current Position");
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
         startMarker = mGoogleMap.addMarker(markerOptions);
-
-        //String currentMarkerAddress = getAddressByLatLong(latLng.latitude, latLng.longitude);
-        //Toast.makeText(getActivity(), currentMarkerAddress,Toast.LENGTH_SHORT).show();
-        //zoom to current position:
-        //mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,11));
-        //If you only need one location, unregister the listener
-        //LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-
     }
 
     public String getAddressByLatLong(Double mLat, Double mLong){
@@ -274,7 +255,6 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
         LatLng p1 = null;
 
         try {
-            // May throw an IOException
             address = coder.getFromLocationName(strAddress, 5);
             if (address == null) {
                 return null;
@@ -301,5 +281,28 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
 
         mDestinationAddress = getAddressByLatLong(point.latitude, point.longitude);
         mDestinationAddressEditText.setText(mDestinationAddress);
+    }
+
+    public void setUpMyLocation()
+    {
+        mGoogleMap.setMyLocationEnabled(true);
+        mGoogleMap.getUiSettings().setMyLocationButtonEnabled(false);
+        buildGoogleApiClient();
+        mGoogleApiClient.connect();
+        LocationManager locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+        Criteria criteria = new Criteria();
+        Location location = locationManager.getLastKnownLocation(locationManager.getBestProvider(criteria, false));
+        if (location != null)
+        {
+            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 13));
+
+            CameraPosition cameraPosition = new CameraPosition.Builder()
+                    .target(new LatLng(location.getLatitude(), location.getLongitude()))      // Sets the center of the map to my location
+                    .zoom(12)                  // Sets the zoom
+                    //.bearing(90)                // Sets the orientation of the camera to east
+                    //.tilt(40)                   // Sets the tilt of the camera to 30 degrees
+                    .build();                   // Creates a CameraPosition from the builder
+            mGoogleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+        }
     }
 }
