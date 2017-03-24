@@ -1,14 +1,6 @@
 apply plugin: 'com.android.application'
 
 android {
-    signingConfigs {
-        config {
-            keyAlias 'android'
-            keyPassword 'android'
-            storeFile file('C:/Users/a.thanjira/.android/debug.keystore')
-            storePassword 'android'
-        }
-    }
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
     defaultConfig {
