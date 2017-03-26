@@ -22,6 +22,18 @@
 
     <include layout="@layout/content_main" />
 
+    <TextView android:layout_width="match_parent"
+        android:id="@+id/tripStatusTextView"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/black"
+        android:textSize="16dp"
+        android:gravity="center"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="25dp"
+        android:layout_marginLeft="25dp"
+        android:layout_marginRight="100dp">
+    </TextView>
+
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
         android:layout_width="wrap_content"

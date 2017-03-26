@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Criteria;
@@ -23,6 +24,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -39,6 +41,7 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.vision.text.Text;
 
 import java.io.IOException;
 import java.util.List;
@@ -48,6 +51,7 @@ import upm.softwaredesign.uber.MainActivity;
 import upm.softwaredesign.uber.R;
 import upm.softwaredesign.uber.utilities.Constants;
 import upm.softwaredesign.uber.utilities.HttpManager;
+import upm.softwaredesign.uber.utilities.ScheduledService;
 
 
 public class MapViewFragment extends Fragment implements OnMapReadyCallback,
@@ -69,6 +73,16 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
 
     private FloatingActionButton mFloatingActionButton;
     private EditText mDestinationAddressEditText;
+    public TextView mTripStatusTextView;
+
+    private enum TripStatus {
+        FREE,
+        REQUESTED,
+        ACTIVE,
+        FINISHED
+    }
+
+    TripStatus mTripStatus;
 
     @Nullable
     @Override
@@ -91,6 +105,9 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
         mGoogleMap = gMap;
         mFloatingActionButton   = (FloatingActionButton) getActivity().findViewById(R.id.fab);
         mDestinationAddressEditText = (EditText) getActivity().findViewById(R.id.destination_edit_text);
+        mTripStatusTextView = (TextView) getActivity().findViewById(R.id.tripStatusTextView);
+        mTripStatus = TripStatus.FREE;
+        //mTripStatusTextView.setText("You have not requested any trip");
 
         if (ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED &&
@@ -114,33 +131,32 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
         mFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View view) {
-                if (destinationMarker != null) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
-                    builder.setTitle("Request a cab")
-                            .setMessage("Do you want to request a cab from " + startMarker.getPosition().toString() + " to " + destinationMarker.getPosition().toString() + "?")
-                            .setIcon(android.R.drawable.ic_dialog_alert)
-                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                if (mTripStatus == TripStatus.FREE) {
 
-                                public void onClick(DialogInterface dialog, int whichButton) {
-                                    HttpManager httpManager = new HttpManager(Constants.REQUEST_TRIP_URL, getActivity());
-                                    httpManager.sendPosition(startMarker.getPosition(), destinationMarker.getPosition());
-                                    AlertDialog.Builder a_builder = new AlertDialog.Builder(view.getContext());
-                                    a_builder.setMessage("Your cab request has sent!")
-                                            .setCancelable(false)
-                                            .setPositiveButton("GOT IT", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    dialog.cancel();
-                                                }
-                                            });
-                                    AlertDialog alert = a_builder.create();
-                                    alert.setTitle("REQUEST NOTIFICATION");
-                                    alert.show();
-                                }})
-                            .setNegativeButton(android.R.string.no, null).show();
+                    if (destinationMarker != null) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
+                        builder.setTitle("Request a cab")
+                                .setMessage("Do you want to request a cab from " + startMarker.getPosition().toString() + " to " + destinationMarker.getPosition().toString() + "?")
+                                .setIcon(android.R.drawable.ic_dialog_alert)
+                                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+
+                                    public void onClick(DialogInterface dialog, int whichButton) {
+                                        HttpManager httpManager = new HttpManager(getActivity());
+                                        httpManager.sendPosition(startMarker.getPosition(), destinationMarker.getPosition());
+                                    }
+                                })
+                                .setNegativeButton(android.R.string.no, null).show();
+                    } else {
+                        Toast.makeText(getActivity(), "Tap on map to choose destination!", Toast.LENGTH_SHORT).show();
+                    }
+                } else if (mTripStatus == TripStatus.REQUESTED) {
+                    Toast.makeText(getActivity(), "You have already requested a cab, you cannot make new request", Toast.LENGTH_SHORT).show();
+                } else if (mTripStatus == TripStatus.ACTIVE) {
+                    Toast.makeText(getActivity(), "You are already in a cab to your destination.", Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(getActivity(),"Tap on map to choose destination!",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), "Your trip status is not FREE.", Toast.LENGTH_SHORT).show();
                 }
+
             }
         });
 
@@ -274,13 +290,22 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
     }
 
     public void changeDestinationLocation(LatLng point) {
-        MarkerOptions destinationMarkerOptions = new MarkerOptions().position(new LatLng(point.latitude, point.longitude)).title("Destination");
-        if (destinationMarker != null)
-            destinationMarker.remove();
-        destinationMarker = mGoogleMap.addMarker(destinationMarkerOptions);
+        if (mTripStatus == TripStatus.FREE)
+        {
+            MarkerOptions destinationMarkerOptions = new MarkerOptions().position(new LatLng(point.latitude, point.longitude)).title("Destination");
+            if (destinationMarker != null)
+                destinationMarker.remove();
+            destinationMarker = mGoogleMap.addMarker(destinationMarkerOptions);
 
-        mDestinationAddress = getAddressByLatLong(point.latitude, point.longitude);
-        mDestinationAddressEditText.setText(mDestinationAddress);
+            mDestinationAddress = getAddressByLatLong(point.latitude, point.longitude);
+            mDestinationAddressEditText.setText(mDestinationAddress);
+        } else if (mTripStatus == TripStatus.REQUESTED) {
+            Toast.makeText(getActivity(), "You have already requested a cab, you cannot make new request", Toast.LENGTH_SHORT).show();
+        } else if (mTripStatus == TripStatus.ACTIVE) {
+            Toast.makeText(getActivity(), "You are already in a cab to your destination.", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(getActivity(), "Your trip status is not FREE.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void setUpMyLocation()
@@ -304,5 +329,12 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
                     .build();                   // Creates a CameraPosition from the builder
             mGoogleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
         }
+    }
+
+    public void startTripStatusCheck()
+    {
+        // use this to start and trigger a service
+        Intent i= new Intent(getActivity(), ScheduledService.class);
+        getActivity().startService(i);
     }
 }
