@@ -26,6 +26,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 
 import upm.softwaredesign.uber.fragments.MapViewFragment;
+import upm.softwaredesign.uber.fragments.TripStatusDialogFragment;
 
 import static upm.softwaredesign.uber.R.id.nav_view;
 
@@ -38,6 +39,8 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        showTripStatus();
 
         final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -108,5 +111,11 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void showTripStatus() {
+        FragmentManager fm = getFragmentManager();
+        TripStatusDialogFragment tripStatusDialogFragment = TripStatusDialogFragment.newInstance(13,"requested");
+        tripStatusDialogFragment.show(fm, "trip_status_tag");
     }
 }
