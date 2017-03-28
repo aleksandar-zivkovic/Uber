@@ -7,6 +7,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.widget.Toast;
 import com.google.android.gms.maps.model.LatLng;
 import org.json.JSONObject;
@@ -26,13 +27,14 @@ import java.net.URL;
 
 public class HttpManager {
 
-    private String mURL;
     private Context mContext;
     private HttpURLConnection httpCon;
 
-    public HttpManager(String url, Context context){
+    private Integer mTripId = -99;
+    private String mTripStatus = "Nothing.";
 
-        mURL = url;
+    public HttpManager(Context context){
+
         mContext = context;
     }
 
@@ -168,8 +170,14 @@ public class HttpManager {
                 e.printStackTrace();
             }
             Toast.makeText(mContext, "Your trip ID is: " + tripID.toString() ,Toast.LENGTH_LONG).show();
-            new CheckTripStatus().execute(tripID);
+            mTripId = tripID;
+
+            checkTripStatus(tripID);
         }
+    }
+
+    public void checkTripStatus(Integer tripID) {
+        new CheckTripStatus().execute(tripID);
     }
 
     private class CheckTripStatus extends AsyncTask {
@@ -244,12 +252,15 @@ public class HttpManager {
                 e.printStackTrace();
             }
 
-            try {
-                Toast.makeText(mContext, "Your trip status is: " + tripStatus ,Toast.LENGTH_LONG).show();
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
+            new Handler().postDelayed(new Runnable() {
+                public void run() {
+
+                }
+            }, 5000);
+
+            Toast.makeText(mContext, "Your trip status is: " + tripStatus ,Toast.LENGTH_LONG).show();
+
+
         }
     }
 }
