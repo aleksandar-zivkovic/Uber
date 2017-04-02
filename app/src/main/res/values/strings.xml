@@ -3,6 +3,15 @@
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_login">Sign in</string>
 
+    <!--Strings related to Login activity-->
+    <string name="login_signup_button"><u>create an account</u></string>
+    <string name="login_signin_button">sign in</string>
+    <string name="login_email_address">email address</string>
+    <string name="login_password">password</string>
+
+    <!--Strings related to Signup activity-->
+    <string name="signup_signup_menu">Create an Account</string>
+
     <!--Strings related to Main activity-->
     <string name="main_hint_search_destination">Where to?</string>
 
