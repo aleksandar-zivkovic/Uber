@@ -11,6 +11,11 @@
 
     <!--Strings related to Signup activity-->
     <string name="signup_signup_menu">Create an Account</string>
+    <string name="signup_retype_password">retype password</string>
+    <string name="signup_firstname">your first name</string>
+    <string name="signup_lastname">your last name</string>
+    <string name="signup_phone_number">phone number</string>
+    <string name="signup_signup_button">sign up</string>
 
     <!--Strings related to Main activity-->
     <string name="main_hint_search_destination">Where to?</string>

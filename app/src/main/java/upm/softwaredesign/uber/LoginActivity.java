@@ -17,7 +17,7 @@ public class LoginActivity extends AppCompatActivity {
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //NEED TO ADD LOGIN LOGIC HERE
+                //TODO: NEED TO ADD LOGIN LOGIC HERE
                 Intent i = new Intent(LoginActivity.this, MainActivity.class);
                 startActivity(i);
             }

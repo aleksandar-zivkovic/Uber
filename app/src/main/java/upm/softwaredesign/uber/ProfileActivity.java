@@ -84,6 +84,7 @@ public class ProfileActivity extends AppCompatActivity {
 
                     ImageView imageView = (ImageView)findViewById(R.id.edit_profile_image_view);
                     imageView.setImageBitmap(imageBitmap);
+                    imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
                     //Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage));
 
