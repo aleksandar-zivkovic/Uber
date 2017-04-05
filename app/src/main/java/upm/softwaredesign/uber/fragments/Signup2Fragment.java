@@ -1,14 +1,19 @@
 package upm.softwaredesign.uber.fragments;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.Toast;
 
+import upm.softwaredesign.uber.LoginActivity;
 import upm.softwaredesign.uber.R;
+import upm.softwaredesign.uber.SignUpActivity;
 
 
 /**
@@ -20,7 +25,9 @@ import upm.softwaredesign.uber.R;
  * create an instance of this fragment.
  */
 public class Signup2Fragment extends Fragment {
-
+    EditText etfn,etln,etphone;
+    static String firstname,lastname,phonenumber;
+    static String register_json;
     private OnFragmentInteractionListener mListener;
 
     public Signup2Fragment() {
@@ -68,10 +75,30 @@ public class Signup2Fragment extends Fragment {
 
         //added onclick listener for sign up button
         View createButton = view.findViewById(R.id.signup_signup_button);
+        etfn = (EditText)view.findViewById(R.id.signup_fragment_firstname);
+        etln = (EditText)view.findViewById(R.id.signup_fragment_lastname);
+        etphone = (EditText)view.findViewById(R.id.signup_fragment_phone);
         createButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO: add logic for user registration
+
+                firstname = etfn.getText().toString();
+                lastname = etln.getText().toString();
+                phonenumber = etphone.getText().toString();
+                register_json = "{"+"\"email\""+":\""+Signup1Fragment.account+"\","+
+                        "\"password\""+":\""+Signup1Fragment.pw1+"\","+
+                        "\"first_name\""+":\""+firstname+"\","+
+                        "\"last_name\""+":\""+lastname+"\","+
+                        "\"phone_number\""+":\""+phonenumber+"\","+
+                        "}";
+                //TODO: send this json to the server.
+
+                Intent intent = new Intent();
+                intent.setClass(getActivity(),LoginActivity.class);
+                startActivity(intent);
+
+                Toast toast = Toast.makeText(getActivity(), "Sign up Successfully!",Toast.LENGTH_SHORT);
+                toast.show();
             }
         });
 

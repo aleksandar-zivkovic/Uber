@@ -1,17 +1,24 @@
 package upm.softwaredesign.uber.fragments;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.widget.EditText;
+import android.support.v7.app.AppCompatActivity;
+import android.widget.Toast;
 
 import upm.softwaredesign.uber.R;
+import upm.softwaredesign.uber.SignUpActivity;
 
+import static android.R.attr.accountType;
 import static android.R.attr.fragment;
 
 
@@ -28,6 +35,8 @@ public class Signup1Fragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+    static String account,pw1,pw2;
+    EditText email,pw,pwr;
 
 
     private OnFragmentInteractionListener mListener;
@@ -54,6 +63,7 @@ public class Signup1Fragment extends Fragment {
 
     }
 
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -62,18 +72,37 @@ public class Signup1Fragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_signup1, container, false);
 
         View nextButton = view.findViewById(R.id.signup_fragment_next_button);
+        email = (EditText)view.findViewById(R.id.signup_fragment_email);
+        pw = (EditText)view.findViewById(R.id.signup_fragment_password);
+        pwr = (EditText)view.findViewById(R.id.signup_fragment_retype_password) ;
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Fragment fragment = new Signup2Fragment();
-                if (fragment != null) {
+                account = email.getText().toString();
+                pw1=pw.getText().toString();
+                pw2=pwr.getText().toString();
 
-                    FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-                    FragmentTransaction transaction = fragmentManager.beginTransaction();
-                    transaction.replace(R.id.signup_frame, fragment);
-                    transaction.addToBackStack(null);
-                    transaction.commit();
+                if((pw1.equals("")&&pw2.equals(""))||(account.equals(""))){
+                    Toast toast = Toast.makeText(getActivity(), "You must input these information",Toast.LENGTH_SHORT);
+                    toast.show();
                 }
+                if(pw1.equals(pw2)&&(!account.equals(""))&&(!pw1.equals(""))){
+                    Fragment fragment = new Signup2Fragment();
+                    if (fragment != null) {
+
+                        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                        FragmentTransaction transaction = fragmentManager.beginTransaction();
+                        transaction.replace(R.id.signup_frame, fragment);
+                        transaction.addToBackStack(null);
+                        transaction.commit();
+                    }
+                }
+                else if((!pw1.equals(pw2))&&(!account.equals(""))){
+                    Toast toast = Toast.makeText(getActivity(), "Your passwords are not the same. Please check them!",Toast.LENGTH_SHORT);
+                    toast.show();
+                }
+
+
             }
         });
 
