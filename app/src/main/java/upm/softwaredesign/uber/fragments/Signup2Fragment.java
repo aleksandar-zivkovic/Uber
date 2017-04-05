@@ -14,6 +14,7 @@ import android.widget.Toast;
 import upm.softwaredesign.uber.LoginActivity;
 import upm.softwaredesign.uber.R;
 import upm.softwaredesign.uber.SignUpActivity;
+import upm.softwaredesign.uber.utilities.HttpManager;
 
 
 /**
@@ -26,7 +27,8 @@ import upm.softwaredesign.uber.SignUpActivity;
  */
 public class Signup2Fragment extends Fragment {
     EditText etfn,etln,etphone;
-    static String firstname,lastname,phonenumber;
+    public static String firstname,lastname,phonenumber;
+    public static String localtoken_whenregister;
     static String register_json;
     private OnFragmentInteractionListener mListener;
 
@@ -85,20 +87,18 @@ public class Signup2Fragment extends Fragment {
                 firstname = etfn.getText().toString();
                 lastname = etln.getText().toString();
                 phonenumber = etphone.getText().toString();
-                register_json = "{"+"\"email\""+":\""+Signup1Fragment.account+"\","+
-                        "\"password\""+":\""+Signup1Fragment.pw1+"\","+
-                        "\"first_name\""+":\""+firstname+"\","+
-                        "\"last_name\""+":\""+lastname+"\","+
-                        "\"phone_number\""+":\""+phonenumber+"\","+
-                        "}";
                 //TODO: send this json to the server.
+                HttpManager httpManager = new HttpManager(getActivity());
+                httpManager.sendRegisteration();
+                //Save the token
+                localtoken_whenregister = HttpManager.RegisterToken;
+
 
                 Intent intent = new Intent();
                 intent.setClass(getActivity(),LoginActivity.class);
                 startActivity(intent);
 
-                Toast toast = Toast.makeText(getActivity(), "Sign up Successfully!",Toast.LENGTH_SHORT);
-                toast.show();
+
             }
         });
 

@@ -21,6 +21,12 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import upm.softwaredesign.uber.LoginActivity;
+import upm.softwaredesign.uber.fragments.Signup1Fragment;
+import upm.softwaredesign.uber.fragments.Signup2Fragment;
+
+import static upm.softwaredesign.uber.R.id.start;
+
 /**
  * Created by Aleksandar on 12/03/2017.
  */
@@ -32,6 +38,8 @@ public class HttpManager {
 
     private Integer mTripId = -99;
     private String mTripStatus = "Nothing.";
+    public static String RegisterToken = "";
+    public static String requestlogin="";
 
     public HttpManager(Context context){
 
@@ -76,7 +84,64 @@ public class HttpManager {
         }
 
     }
+    public void sendRegisteration(){
 
+        if(!isConnected()){
+            new AlertDialog.Builder(mContext)
+                    .setTitle("Error !")
+                    .setMessage("No internet connection")
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+            return;
+        }
+        //Create JSONObject
+        try{
+            String email = Signup1Fragment.account;
+            String password = Signup1Fragment.pw1;
+            String fn = Signup2Fragment.firstname;
+            String ln = Signup2Fragment.lastname;
+            String pn = Signup2Fragment.phonenumber;
+
+            JSONObject registerJson = new JSONObject();
+            registerJson.put("email",email);
+            registerJson.put("password",password);
+            registerJson.put("first_name",fn);
+            registerJson.put("last_name",ln);
+            registerJson.put("phone_number",pn);
+            new RequestRegisterToken().execute(registerJson);
+
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
+    }
+    public void sendLogin(){
+
+        if(!isConnected()){
+            new AlertDialog.Builder(mContext)
+                    .setTitle("Error !")
+                    .setMessage("No internet connection")
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+            return;
+        }
+        //Create JSONObject
+        try{
+            String em= LoginActivity.login_account;
+            String ep = LoginActivity.login_password;
+
+            JSONObject loginJson = new JSONObject();
+            loginJson.put("username",em);
+            loginJson.put("password",ep);
+            new RequestLogin().execute(loginJson);
+
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
+    }
     public boolean isConnected(){
         ConnectivityManager connMgr = (ConnectivityManager) mContext.getSystemService(Activity.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
@@ -84,6 +149,115 @@ public class HttpManager {
             return true;
         else
             return false;
+    }
+    private class RequestRegisterToken extends AsyncTask {
+
+        @Override
+        protected Object doInBackground(Object[] params) {
+
+
+            JSONObject jsonData = (JSONObject) params[0];
+
+            try {
+                httpCon = (HttpURLConnection) ((new URL (Constants.Register_URL).openConnection()));
+                httpCon.setDoOutput(true);
+                httpCon.setRequestProperty("Content-Type", "application/json");
+                httpCon.setRequestProperty("Accept", "application/json");
+                httpCon.setRequestMethod("POST");
+                httpCon.connect();
+
+                //Write
+                OutputStream os = httpCon.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+                writer.write(jsonData.toString());
+                writer.close();
+                os.close();
+
+                //Read
+                int status = httpCon.getResponseCode();
+                if (status == 200) {
+                    Toast toast = Toast.makeText(mContext, "Sign up Successfully!",Toast.LENGTH_SHORT);
+                    toast.show();
+                    InputStream is = httpCon.getInputStream();
+                    BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                    String line = null;
+                    StringBuilder sb = new StringBuilder();
+
+                    while ((line = br.readLine()) != null) {
+                        sb.append(line);
+                    }
+
+                    br.close();
+                    RegisterToken = sb.toString();
+
+
+                } else if (status == 400) {
+                    RegisterToken = "Error 400 - Email has already registered before";
+                } else if (status == 404) {
+                    InputStream error = httpCon.getErrorStream();
+                    RegisterToken = "Error 404";
+                } else {
+                    RegisterToken = "Error!";
+                }
+            }
+            catch (Exception e) {
+                e.getStackTrace();
+            }
+
+            return RegisterToken;
+        }
+    }
+
+    private class RequestLogin extends AsyncTask {
+
+        @Override
+        protected Object doInBackground(Object[] params) {
+            JSONObject jsonData = (JSONObject) params[0];
+            try {
+                httpCon = (HttpURLConnection) ((new URL (Constants.Login_URL).openConnection()));
+                httpCon.setDoOutput(true);
+                httpCon.setRequestProperty("Content-Type", "application/json");
+                httpCon.setRequestProperty("Accept", "application/json");
+                httpCon.setRequestMethod("POST");
+                httpCon.connect();
+
+                //Write
+                OutputStream os = httpCon.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+                writer.write(jsonData.toString());
+                writer.close();
+                os.close();
+
+                //Read
+                int status = httpCon.getResponseCode();
+                if (status == 200) {
+                    InputStream is = httpCon.getInputStream();
+                    BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                    String line = null;
+                    StringBuilder sb = new StringBuilder();
+
+                    while ((line = br.readLine()) != null) {
+                        sb.append(line);
+                    }
+
+                    br.close();
+                    requestlogin = sb.toString();
+
+                } else if (status == 400) {
+                    requestlogin = "Error 400";
+                } else if (status == 404) {
+                    InputStream error = httpCon.getErrorStream();
+                    requestlogin = "Error 404";
+                } else {
+                    requestlogin = "Error!";
+                }
+            }
+            catch (Exception e) {
+                e.getStackTrace();
+            }
+
+            return requestlogin;
+        }
     }
 
 

@@ -35,7 +35,7 @@ public class Signup1Fragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
-    static String account,pw1,pw2;
+    public static String account,pw1,pw2;
     EditText email,pw,pwr;
 
 
