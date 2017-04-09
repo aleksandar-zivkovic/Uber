@@ -149,8 +149,8 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
                     if (destinationMarker != null) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
                         builder.setTitle("Request a cab")
-                                .setMessage("Do you want to request a cab from " + startMarker.getPosition().toString() + " to " + destinationMarker.getPosition().toString() + "?")
-                                .setIcon(android.R.drawable.ic_dialog_alert)
+                                .setMessage("Are you sure you want to request a cab?")
+                                .setIcon(R.mipmap.ic_launcher)
                                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
                                     public void onClick(DialogInterface dialog, int whichButton) {

@@ -30,11 +30,11 @@ public class TripStatusDialogFragment extends DialogFragment {
     private TextView mTripStatusTextView;
     private ImageView mImageView;
 
-    public static TripStatusDialogFragment newInstance(int tripId, String tripStatus) {
+    public static TripStatusDialogFragment newInstance(String tripID, String tripStatus) {
         TripStatusDialogFragment frag = new TripStatusDialogFragment();
         Bundle args = new Bundle();
-        args.putInt("trip_id", tripId);
-        args.putString("trip_status", tripStatus);
+        args.putString("tripID", tripID);
+        args.putString("tripStatus", tripStatus);
         frag.setArguments(args);
         return frag;
     }
@@ -55,17 +55,13 @@ public class TripStatusDialogFragment extends DialogFragment {
 
         getDialog().setTitle("Trip Status Dialog");
 
-        //set trip status image
         mImageView.setImageResource(R.mipmap.ic_launcher);
 
-        // Fetch arguments from bundle and set title
-        int trip_id = getArguments().getInt("trip_id");
-        mTripIdTextView.setText(Integer.toString(trip_id));
-        //mTripIdTextView.setText(trip_id);
+        String tripID = getArguments().getString("tripID");
+        mTripIdTextView.setText(tripID);
 
-        // Fetch arguments from bundle and set title
-        String trip_status = getArguments().getString("trip_status");
-        mTripStatusTextView.setText(trip_status);
+        String tripStatus = getArguments().getString("tripStatus");
+        mTripStatusTextView.setText(tripStatus);
 
     }
 

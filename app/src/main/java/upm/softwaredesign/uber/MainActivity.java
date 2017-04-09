@@ -31,6 +31,7 @@ import com.google.android.gms.maps.model.Marker;
 import upm.softwaredesign.uber.fragments.MapViewFragment;
 import upm.softwaredesign.uber.fragments.SelectLocationFragment;
 import upm.softwaredesign.uber.fragments.TripStatusDialogFragment;
+import upm.softwaredesign.uber.utilities.Constants;
 
 import static android.R.attr.fragment;
 import static android.icu.lang.UCharacter.GraphemeClusterBreak.V;
@@ -42,14 +43,15 @@ public class MainActivity extends AppCompatActivity
 
     private SelectLocationFragment mSelectLocationFragment;
 
+    private String mTripId;
+    private String mTripStatus;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        showTripStatus();
 
         final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -65,7 +67,7 @@ public class MainActivity extends AppCompatActivity
         fm.beginTransaction().replace(R.id.content_frame, new MapViewFragment()).commit();
         fm.beginTransaction()
                 .add(R.id.main_layout, mSelectLocationFragment, "select location fragment")
-                .hide(mSelectLocationFragment)
+                .show(mSelectLocationFragment)
                 .commit();
 
         FloatingActionButton menu = (FloatingActionButton)findViewById(R.id.floating_button_menu);
@@ -109,6 +111,17 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        Intent tripStatusIntent = getIntent();
+        if (tripStatusIntent.getFlags() == Constants.TRIP_STATUS_INTENT_FLAG) {
+            if (tripStatusIntent != null) {
+                Bundle bundle = tripStatusIntent.getExtras();
+                if (bundle != null) {
+                    mTripId = bundle.getString(Constants.TRIP_ID);
+                    mTripStatus = bundle.getString(Constants.TRIP_STATUS);
+                    showTripStatus(mTripId, mTripStatus);
+                }
+            }
+        }
     }
 
     public void showSelectionLocationFragment() {
@@ -137,7 +150,8 @@ public class MainActivity extends AppCompatActivity
             fm.beginTransaction().replace(R.id.content_frame, new MapViewFragment()).commit();
         } else */
         if (id == R.id.nav_logout) {
-
+            Intent i = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(i);
         } else if (id == R.id.nav_about) {
 
         }
@@ -146,9 +160,9 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    private void showTripStatus() {
+    private void showTripStatus(String tripID, String tripStatus) {
         FragmentManager fm = getFragmentManager();
-        TripStatusDialogFragment tripStatusDialogFragment = TripStatusDialogFragment.newInstance(13,"requested");
+        TripStatusDialogFragment tripStatusDialogFragment = TripStatusDialogFragment.newInstance(tripID, tripStatus);
         tripStatusDialogFragment.show(fm, "trip_status_tag");
     }
 

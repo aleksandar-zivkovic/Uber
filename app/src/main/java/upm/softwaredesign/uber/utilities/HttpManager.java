@@ -2,8 +2,11 @@ package upm.softwaredesign.uber.utilities;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -22,9 +25,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import upm.softwaredesign.uber.LoginActivity;
+import upm.softwaredesign.uber.MainActivity;
 import upm.softwaredesign.uber.fragments.Signup1Fragment;
 import upm.softwaredesign.uber.fragments.Signup2Fragment;
+import upm.softwaredesign.uber.fragments.TripStatusDialogFragment;
 
+import static upm.softwaredesign.uber.R.id.contact;
 import static upm.softwaredesign.uber.R.id.start;
 
 /**
@@ -36,8 +42,8 @@ public class HttpManager {
     private Context mContext;
     private HttpURLConnection httpCon;
 
-    private Integer mTripId = -99;
-    private String mTripStatus = "Nothing.";
+    private Integer mTripId;
+    private String mTripStatus;
     public static String RegisterToken = "";
     public static String requestlogin="";
 
@@ -68,11 +74,11 @@ public class HttpManager {
 
             JSONObject pickupJsonObject = new JSONObject();
             pickupJsonObject.put("lat", startLatitude);
-            pickupJsonObject.put("long", startLongitude);
+            pickupJsonObject.put("lon", startLongitude);
 
             JSONObject dropoffJsonObject = new JSONObject();
             dropoffJsonObject.put("lat", destinationLatitude);
-            dropoffJsonObject.put("long", destinationLongitude);
+            dropoffJsonObject.put("lon", destinationLongitude);
 
             cabRequestJsonObject.put("pickup", pickupJsonObject);
             cabRequestJsonObject.put("dropoff", dropoffJsonObject);
@@ -128,7 +134,7 @@ public class HttpManager {
         }
         //Create JSONObject
         try{
-            String em= LoginActivity.login_account;
+            String em = LoginActivity.login_account;
             String ep = LoginActivity.login_password;
 
             JSONObject loginJson = new JSONObject();
@@ -191,8 +197,8 @@ public class HttpManager {
                     RegisterToken = sb.toString();
 
 
-                } else if (status == 400) {
-                    RegisterToken = "Error 400 - Email has already registered before";
+                } else if (status == 403) {
+                    RegisterToken = "Error 403 - Email has already registered before";
                 } else if (status == 404) {
                     InputStream error = httpCon.getErrorStream();
                     RegisterToken = "Error 404";
@@ -343,10 +349,11 @@ public class HttpManager {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            Toast.makeText(mContext, "Your trip ID is: " + tripID.toString() ,Toast.LENGTH_LONG).show();
+            //Toast.makeText(mContext, "Your trip ID is: " + tripID.toString() ,Toast.LENGTH_LONG).show();
             mTripId = tripID;
 
             checkTripStatus(tripID);
+
         }
     }
 
@@ -426,15 +433,12 @@ public class HttpManager {
                 e.printStackTrace();
             }
 
-            new Handler().postDelayed(new Runnable() {
-                public void run() {
-
-                }
-            }, 5000);
-
-            Toast.makeText(mContext, "Your trip status is: " + tripStatus ,Toast.LENGTH_LONG).show();
-
-
+            mTripStatus = tripStatus;
+            //Toast.makeText(mContext, "Your trip status is: " + tripStatus ,Toast.LENGTH_LONG).show();
+            Intent intent = new Intent(mContext, MainActivity.class).setFlags(Constants.TRIP_STATUS_INTENT_FLAG);
+            intent.putExtra(Constants.TRIP_ID, String.valueOf(mTripId));
+            intent.putExtra(Constants.TRIP_STATUS, mTripStatus);
+            mContext.startActivity(intent);
         }
     }
 }
