@@ -53,6 +53,8 @@ import upm.softwaredesign.uber.utilities.Constants;
 import upm.softwaredesign.uber.utilities.HttpManager;
 import upm.softwaredesign.uber.utilities.ScheduledService;
 
+import static android.os.Build.VERSION_CODES.M;
+
 
 public class MapViewFragment extends Fragment implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
@@ -69,9 +71,11 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
     private Marker startMarker;
     private Marker destinationMarker;
 
+    private String mStartAddress;
     private String mDestinationAddress;
 
     private FloatingActionButton mFloatingActionButton;
+    private EditText mStartAddressEditText;
     private EditText mDestinationAddressEditText;
     public TextView mTripStatusTextView;
 
@@ -104,7 +108,10 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
 
         mGoogleMap = gMap;
         mFloatingActionButton   = (FloatingActionButton) getActivity().findViewById(R.id.fab);
-        mDestinationAddressEditText = (EditText) getActivity().findViewById(R.id.destination_edit_text);
+        //mDestinationAddressEditText = (EditText) getActivity().findViewById(R.id.destination_edit_text);
+        mStartAddressEditText = (EditText) getActivity().findViewById(R.id.select_location_from_edit_text);
+        mDestinationAddressEditText = (EditText) getActivity().findViewById(R.id.select_location_to_edit_text);
+
         mTripStatusTextView = (TextView) getActivity().findViewById(R.id.tripStatusTextView);
         mTripStatus = TripStatus.FREE;
         //mTripStatusTextView.setText("You have not requested any trip");
@@ -124,7 +131,13 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
 
             @Override
             public void onMapClick(LatLng point) {
-                changeDestinationLocation(point);
+                ((MainActivity)getActivity()).showSelectionLocationFragment();
+                if(mStartAddressEditText.hasFocus()){
+                    changeStartLocation(point);
+                }
+                else {
+                    changeDestinationLocation(point);
+                }
             }
         });
 
@@ -158,6 +171,20 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
                 }
 
             }
+        });
+
+        mStartAddressEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+            // When focus is lost check that the text field has valid values.
+                if (!hasFocus) {
+                    String address = mStartAddressEditText.getText().toString();
+                    LatLng location = getLocationFromAddress(getActivity(), address);
+                    changeStartLocation(location); // TODO - this has to be given more work and checks
+                }
+            }
+
         });
 
         mDestinationAddressEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -228,7 +255,7 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
 
     @Override
     public void onLocationChanged(Location location) {
-        if (startMarker != null) {
+       /* if (startMarker != null) {
             startMarker.remove();
         }
         latLng = new LatLng(location.getLatitude(), location.getLongitude());
@@ -236,7 +263,7 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
         markerOptions.position(latLng);
         markerOptions.title("Current Position");
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-        startMarker = mGoogleMap.addMarker(markerOptions);
+        startMarker = mGoogleMap.addMarker(markerOptions);*/
     }
 
     public String getAddressByLatLong(Double mLat, Double mLong){
@@ -287,6 +314,22 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
         }
 
         return p1;
+    }
+
+    public void changeStartLocation(LatLng point) {
+        if (mTripStatus == TripStatus.FREE)
+        {
+            startMarker.setPosition(point);
+            mStartAddress = getAddressByLatLong(point.latitude, point.longitude);
+            mStartAddressEditText.setText(mStartAddress);
+        } else if (mTripStatus == TripStatus.REQUESTED) {
+            Toast.makeText(getActivity(), "You have already requested a cab, you cannot make new request", Toast.LENGTH_SHORT).show();
+        } else if (mTripStatus == TripStatus.ACTIVE) {
+            Toast.makeText(getActivity(), "You are already in a cab to your destination.", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(getActivity(), "Your trip status is not FREE.", Toast.LENGTH_SHORT).show();
+        }
+
     }
 
     public void changeDestinationLocation(LatLng point) {

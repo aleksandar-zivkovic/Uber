@@ -1,7 +1,9 @@
 package upm.softwaredesign.uber;
 
 import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -14,6 +16,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,12 +29,18 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 
 import upm.softwaredesign.uber.fragments.MapViewFragment;
+import upm.softwaredesign.uber.fragments.SelectLocationFragment;
 import upm.softwaredesign.uber.fragments.TripStatusDialogFragment;
 
+import static android.R.attr.fragment;
+import static android.icu.lang.UCharacter.GraphemeClusterBreak.V;
 import static upm.softwaredesign.uber.R.id.nav_view;
+import static upm.softwaredesign.uber.R.id.textView;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, SelectLocationFragment.OnFragmentInteractionListener {
+
+    private SelectLocationFragment mSelectLocationFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +61,12 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         FragmentManager fm = getFragmentManager();
+        mSelectLocationFragment = new SelectLocationFragment();
         fm.beginTransaction().replace(R.id.content_frame, new MapViewFragment()).commit();
+        fm.beginTransaction()
+                .add(R.id.main_layout, mSelectLocationFragment, "select location fragment")
+                .hide(mSelectLocationFragment)
+                .commit();
 
         FloatingActionButton menu = (FloatingActionButton)findViewById(R.id.floating_button_menu);
         menu.setOnClickListener(new View.OnClickListener() {
@@ -82,9 +96,28 @@ public class MainActivity extends AppCompatActivity
                 startActivity(i);
             }
         });
+
+        EditText whereTo = (EditText) findViewById(R.id.destination_edit_text);
+        whereTo.setKeyListener(null);
+
+        //add onclick listener for selecting location
+        View selectLocation = findViewById(R.id.destination_edit_text);
+        selectLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showSelectionLocationFragment();
+            }
+        });
+
     }
 
-
+    public void showSelectionLocationFragment() {
+        getFragmentManager().beginTransaction()
+                .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out)
+                .addToBackStack(null)
+                .show(mSelectLocationFragment)
+                .commit();
+    }
 
     @Override
     public void onBackPressed() {
@@ -117,5 +150,11 @@ public class MainActivity extends AppCompatActivity
         FragmentManager fm = getFragmentManager();
         TripStatusDialogFragment tripStatusDialogFragment = TripStatusDialogFragment.newInstance(13,"requested");
         tripStatusDialogFragment.show(fm, "trip_status_tag");
+    }
+
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
     }
 }
