@@ -6,8 +6,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 
-import upm.softwaredesign.uber.fragments.Signup1Fragment;
-import upm.softwaredesign.uber.fragments.Signup2Fragment;
 import upm.softwaredesign.uber.utilities.HttpManager;
 
 public class LoginActivity extends AppCompatActivity {

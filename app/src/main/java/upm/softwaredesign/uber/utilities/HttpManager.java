@@ -2,21 +2,17 @@ package upm.softwaredesign.uber.utilities;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.os.Handler;
 import android.widget.Toast;
 import com.google.android.gms.maps.model.LatLng;
 import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -26,12 +22,7 @@ import java.net.URL;
 
 import upm.softwaredesign.uber.LoginActivity;
 import upm.softwaredesign.uber.MainActivity;
-import upm.softwaredesign.uber.fragments.Signup1Fragment;
-import upm.softwaredesign.uber.fragments.Signup2Fragment;
-import upm.softwaredesign.uber.fragments.TripStatusDialogFragment;
-
-import static upm.softwaredesign.uber.R.id.contact;
-import static upm.softwaredesign.uber.R.id.start;
+import upm.softwaredesign.uber.SignUpActivity;
 
 /**
  * Created by Aleksandar on 12/03/2017.
@@ -102,11 +93,11 @@ public class HttpManager {
         }
         //Create JSONObject
         try{
-            String email = Signup1Fragment.account;
-            String password = Signup1Fragment.pw1;
-            String fn = Signup2Fragment.firstname;
-            String ln = Signup2Fragment.lastname;
-            String pn = Signup2Fragment.phonenumber;
+            String email = SignUpActivity.account;
+            String password = SignUpActivity.pw1;
+            String fn = SignUpActivity.firstname;
+            String ln = SignUpActivity.lastname;
+            String pn = SignUpActivity.phonenumber;
 
             JSONObject registerJson = new JSONObject();
             registerJson.put("email",email);
