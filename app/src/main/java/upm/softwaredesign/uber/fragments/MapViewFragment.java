@@ -108,7 +108,6 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
 
         mGoogleMap = gMap;
         mFloatingActionButton   = (FloatingActionButton) getActivity().findViewById(R.id.fab);
-        //mDestinationAddressEditText = (EditText) getActivity().findViewById(R.id.destination_edit_text);
         mStartAddressEditText = (EditText) getActivity().findViewById(R.id.select_location_from_edit_text);
         mDestinationAddressEditText = (EditText) getActivity().findViewById(R.id.select_location_to_edit_text);
 
@@ -177,9 +176,9 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
 
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-            // When focus is lost check that the text field has valid values.
-                if (!hasFocus) {
-                    String address = mStartAddressEditText.getText().toString();
+                // When focus is lost check that the text field has valid values.
+                String address = mStartAddressEditText.getText().toString();
+                if (!hasFocus && !address.isEmpty()) {
                     LatLng location = getLocationFromAddress(getActivity(), address);
                     changeStartLocation(location); // TODO - this has to be given more work and checks
                 }
@@ -187,13 +186,14 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
 
         });
 
+
         mDestinationAddressEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
 
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
             // When focus is lost check that the text field has valid values.
-                if (!hasFocus) {
-                    String address = mDestinationAddressEditText.getText().toString();
+                String address = mDestinationAddressEditText.getText().toString();
+                if (!hasFocus && !address.isEmpty()) {
                     LatLng location = getLocationFromAddress(getActivity(), address);
                     changeDestinationLocation(location); // TODO - this has to be given more work and checks
                 }

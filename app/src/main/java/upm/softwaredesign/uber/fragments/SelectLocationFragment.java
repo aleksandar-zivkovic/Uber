@@ -45,14 +45,6 @@ public class SelectLocationFragment extends Fragment {
         fromView.setText("current location");
         toView.requestFocus();
 
-        fromView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-
-                return false;
-            }
-        });
-
         return view;
     }
 
