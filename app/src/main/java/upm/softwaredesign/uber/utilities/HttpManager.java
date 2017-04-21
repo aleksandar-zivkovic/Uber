@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -32,12 +33,10 @@ public class HttpManager {
 
     private Context mContext;
     private HttpURLConnection httpCon;
-
+    public static String token = "";
+    public static String RegisterStatusJson="";
     private Integer mTripId;
     private String mTripStatus;
-    public static String RegisterToken = "";
-    public static String requestlogin="";
-
     public HttpManager(Context context){
 
         mContext = context;
@@ -82,7 +81,6 @@ public class HttpManager {
 
     }
     public void sendRegisteration(){
-
         if(!isConnected()){
             new AlertDialog.Builder(mContext)
                     .setTitle("Error !")
@@ -105,7 +103,9 @@ public class HttpManager {
             registerJson.put("first_name",fn);
             registerJson.put("last_name",ln);
             registerJson.put("phone_number",pn);
-            new RequestRegisterToken().execute(registerJson);
+
+            new RequestRegister().execute(registerJson);
+
 
         }
         catch (Exception e){
@@ -129,8 +129,9 @@ public class HttpManager {
             String ep = LoginActivity.login_password;
 
             JSONObject loginJson = new JSONObject();
-            loginJson.put("username",em);
+            loginJson.put("email",em);
             loginJson.put("password",ep);
+
             new RequestLogin().execute(loginJson);
 
         }
@@ -147,10 +148,11 @@ public class HttpManager {
         else
             return false;
     }
-    private class RequestRegisterToken extends AsyncTask {
+    public class RequestRegister extends AsyncTask {
 
+       // private ProgressDialog pDialog;
         @Override
-        protected Object doInBackground(Object[] params) {
+        public Object doInBackground(Object[] params) {
 
 
             JSONObject jsonData = (JSONObject) params[0];
@@ -172,41 +174,34 @@ public class HttpManager {
 
                 //Read
                 int status = httpCon.getResponseCode();
-                if (status == 200) {
-                    Toast toast = Toast.makeText(mContext, "Sign up Successfully!",Toast.LENGTH_SHORT);
-                    toast.show();
-                    InputStream is = httpCon.getInputStream();
-                    BufferedReader br = new BufferedReader(new InputStreamReader(is));
-                    String line = null;
-                    StringBuilder sb = new StringBuilder();
-
-                    while ((line = br.readLine()) != null) {
-                        sb.append(line);
-                    }
-
-                    br.close();
-                    RegisterToken = sb.toString();
-
-
+                //System.out.println("register http number:"+status);
+                if (status == 201) {
+                    RegisterStatusJson = "Sign up Successfully!";
+                    System.out.println(RegisterStatusJson);
                 } else if (status == 403) {
-                    RegisterToken = "Error 403 - Email has already registered before";
+                    RegisterStatusJson = "Error 403 - Email has already registered before";
+                    System.out.println(RegisterStatusJson);
                 } else if (status == 404) {
                     InputStream error = httpCon.getErrorStream();
-                    RegisterToken = "Error 404";
+                    RegisterStatusJson = "Error 404";
+                    System.out.println(RegisterStatusJson);
                 } else {
-                    RegisterToken = "Error!";
+                    RegisterStatusJson = "Error!";
+                    System.out.println(RegisterStatusJson);
                 }
             }
             catch (Exception e) {
                 e.getStackTrace();
             }
-
-            return RegisterToken;
+            return RegisterStatusJson;
+        }
+        public String getStatusJson(){
+            return RegisterStatusJson;
         }
     }
 
-    private class RequestLogin extends AsyncTask {
-
+    public class RequestLogin extends AsyncTask {
+        String loginStatusJson = "";
         @Override
         protected Object doInBackground(Object[] params) {
             JSONObject jsonData = (JSONObject) params[0];
@@ -214,11 +209,11 @@ public class HttpManager {
                 httpCon = (HttpURLConnection) ((new URL (Constants.Login_URL).openConnection()));
                 httpCon.setDoOutput(true);
                 httpCon.setRequestProperty("Content-Type", "application/json");
-                httpCon.setRequestProperty("Accept", "application/json");
+                //httpCon.setRequestProperty("Accept", "application/json");
                 httpCon.setRequestMethod("POST");
+                //httpCon.setRequestProperty("Authorization", token);
                 httpCon.connect();
 
-                //Write
                 OutputStream os = httpCon.getOutputStream();
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
                 writer.write(jsonData.toString());
@@ -228,34 +223,29 @@ public class HttpManager {
                 //Read
                 int status = httpCon.getResponseCode();
                 if (status == 200) {
-                    InputStream is = httpCon.getInputStream();
-                    BufferedReader br = new BufferedReader(new InputStreamReader(is));
-                    String line = null;
-                    StringBuilder sb = new StringBuilder();
+                    BufferedReader buf =  new BufferedReader(new InputStreamReader(httpCon.getInputStream()));
+                    token = buf.readLine();
+                    //TODO:Save the token
 
-                    while ((line = br.readLine()) != null) {
-                        sb.append(line);
-                    }
 
-                    br.close();
-                    requestlogin = sb.toString();
 
+                    System.out.println("xxxxXXXX:"+token);
+                    buf.close();
                 } else if (status == 400) {
-                    requestlogin = "Error 400";
+                    loginStatusJson = "Error 400";
                 } else if (status == 404) {
                     InputStream error = httpCon.getErrorStream();
-                    requestlogin = "Error 404";
+                    loginStatusJson = "Error 404";
                 } else {
-                    requestlogin = "Error!";
+                    loginStatusJson = "Error!";
                 }
             }
             catch (Exception e) {
                 e.getStackTrace();
             }
-
-            return requestlogin;
+            return loginStatusJson;
         }
-    }
+     }
 
 
     private class RequestCab extends AsyncTask {
@@ -307,7 +297,6 @@ public class HttpManager {
 
                     br.close();
                     tripIdJsonString = sb.toString();
-
                 } else if (status == 400) {
                     tripIdJsonString = "Error 400 while requesting a cab";
                 } else if (status == 404) {
@@ -404,7 +393,6 @@ public class HttpManager {
             catch (Exception e) {
                 e.getStackTrace();
             }
-
             return tripStatusJson;
         }
 

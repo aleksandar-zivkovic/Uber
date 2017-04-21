@@ -18,8 +18,7 @@ public class SignUpActivity extends AppCompatActivity {
     EditText etfn,etln,etphone;
     int flag=0;
     public static String firstname,lastname,phonenumber;
-    public static String localtoken_whenregister;
-    static String register_json;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,13 +63,11 @@ public class SignUpActivity extends AppCompatActivity {
                     //TODO: send this json to the server.
                     HttpManager httpManager = new HttpManager(SignUpActivity.this);
                     httpManager.sendRegisteration();
-                    //Save the token
-                    localtoken_whenregister = HttpManager.RegisterToken;
-
 
                     Intent intent = new Intent();
                     intent.setClass(SignUpActivity.this,LoginActivity.class);
                     startActivity(intent);
+                    Toast.makeText(SignUpActivity.this,httpManager.RegisterStatusJson,Toast.LENGTH_LONG).show();
                 }
 
             }

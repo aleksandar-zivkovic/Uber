@@ -5,6 +5,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import upm.softwaredesign.uber.utilities.HttpManager;
 
@@ -12,6 +13,7 @@ public class LoginActivity extends AppCompatActivity {
     EditText etaccount,etpassword;
     public static String login_account,login_password;
     public static String servertoken_whenlogin;
+    public static String localtoken_whenregister;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,7 +31,6 @@ public class LoginActivity extends AppCompatActivity {
                 //TODO: send the json to the server and to check
                 HttpManager httpManager = new HttpManager(LoginActivity.this);
                 httpManager.sendLogin();
-                servertoken_whenlogin = HttpManager.requestlogin;
 
                 // can be use when communicate with the server successfully
              //   if(servertoken_whenlogin.equals(Signup2Fragment.localtoken_whenregister))
@@ -49,6 +50,7 @@ public class LoginActivity extends AppCompatActivity {
         signUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 Intent i = new Intent(LoginActivity.this, SignUpActivity.class);
                 startActivity(i);
             }
