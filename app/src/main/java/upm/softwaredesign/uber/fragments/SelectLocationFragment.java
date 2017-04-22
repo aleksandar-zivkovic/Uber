@@ -6,15 +6,13 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.app.Fragment;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
+import android.widget.AutoCompleteTextView;
 
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.places.Places;
-
 import upm.softwaredesign.uber.R;
+import upm.softwaredesign.uber.utilities.PlacesAutoCompleteAdapter;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -28,7 +26,6 @@ public class SelectLocationFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-
     public SelectLocationFragment() {
         // Required empty public constructor
     }
@@ -39,19 +36,17 @@ public class SelectLocationFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_select_location, container, false);
 
-        EditText fromView = (EditText) view.findViewById(R.id.select_location_from_edit_text);
-        EditText toView = (EditText) view.findViewById(R.id.select_location_to_edit_text);
+        // autocomplete
+        AutoCompleteTextView fromView = (AutoCompleteTextView) view.findViewById(R.id.select_location_from_edit_text);
+        fromView.setAdapter(new PlacesAutoCompleteAdapter(getActivity(), R.layout.autocomplete_list_item, getString(R.string.google_maps_key)));
+        fromView.setThreshold(3);
 
-        fromView.setText("current location");
+        AutoCompleteTextView toView = (AutoCompleteTextView) view.findViewById(R.id.select_location_to_edit_text);
+        toView.setAdapter(new PlacesAutoCompleteAdapter(getActivity(), R.layout.autocomplete_list_item, getString(R.string.google_maps_key)));
+        
+        fromView.setHint("current location");
+        fromView.setThreshold(3);
         toView.requestFocus();
-
-        fromView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-
-                return false;
-            }
-        });
 
         return view;
     }
@@ -96,7 +91,6 @@ public class SelectLocationFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
 }
