@@ -31,6 +31,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -178,29 +179,41 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
             public void onFocusChange(View v, boolean hasFocus) {
                 // When focus is lost check that the text field has valid values.
                 String address = mStartAddressEditText.getText().toString();
-                if (!hasFocus && !address.isEmpty()) {
+                if(!address.isEmpty()) {
                     LatLng location = getLocationFromAddress(getActivity(), address);
-                    changeStartLocation(location); // TODO - this has to be given more work and checks
+                    if (location != null) {
+                        if (hasFocus) {
+                            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLng(location));
+                        } else {
+                            changeStartLocation(location); // TODO - this has to be given more work and checks
+                        }
+                    }
                 }
             }
 
         });
-
 
         mDestinationAddressEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
 
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-            // When focus is lost check that the text field has valid values.
+                // When focus is lost check that the text field has valid values.
                 String address = mDestinationAddressEditText.getText().toString();
-                if (!hasFocus && !address.isEmpty()) {
+                if(!address.isEmpty()) {
                     LatLng location = getLocationFromAddress(getActivity(), address);
-                    changeDestinationLocation(location); // TODO - this has to be given more work and checks
+                    if(location!=null) {
+                        if (hasFocus)
+                        {
+                            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLng(location));
+                        }
+                        else {
+                            changeDestinationLocation(location); // TODO - this has to be given more work and checks
+                        }
+                    }
                 }
             }
 
         });
-
 
     }
 
@@ -299,7 +312,7 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
 
         try {
             address = coder.getFromLocationName(strAddress, 5);
-            if (address == null) {
+            if (address == null || address.size()==0) {
                 return null;
             }
             Address location = address.get(0);
@@ -339,9 +352,9 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
             if (destinationMarker != null)
                 destinationMarker.remove();
             destinationMarker = mGoogleMap.addMarker(destinationMarkerOptions);
-
             mDestinationAddress = getAddressByLatLong(point.latitude, point.longitude);
             mDestinationAddressEditText.setText(mDestinationAddress);
+            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLng(point));
         } else if (mTripStatus == TripStatus.REQUESTED) {
             Toast.makeText(getActivity(), "You have already requested a cab, you cannot make new request", Toast.LENGTH_SHORT).show();
         } else if (mTripStatus == TripStatus.ACTIVE) {
