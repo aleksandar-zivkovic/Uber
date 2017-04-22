@@ -9,11 +9,14 @@ import android.widget.Toast;
 
 import upm.softwaredesign.uber.utilities.HttpManager;
 
+import static upm.softwaredesign.uber.utilities.HttpManager.LoginStatus;
+import static upm.softwaredesign.uber.utilities.HttpManager.RegisterStatusJson;
+import static upm.softwaredesign.uber.utilities.HttpManager.loginStatusJson;
+
 public class LoginActivity extends AppCompatActivity {
     EditText etaccount,etpassword;
     public static String login_account,login_password;
-    public static String servertoken_whenlogin;
-    public static String localtoken_whenregister;
+    int temp=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -28,20 +31,25 @@ public class LoginActivity extends AppCompatActivity {
             public void onClick(View v) {
                 login_account = etaccount.getText().toString();
                 login_password = etpassword.getText().toString();
-                //TODO: send the json to the server and to check
                 HttpManager httpManager = new HttpManager(LoginActivity.this);
                 httpManager.sendLogin();
 
-                // can be use when communicate with the server successfully
-             //   if(servertoken_whenlogin.equals(Signup2Fragment.localtoken_whenregister))
-             //   {
+                while(LoginStatus==0)
+                {
+                    temp=1;
+                }
+                if(LoginStatus==200){
+                    Intent i = new Intent(LoginActivity.this, MainActivity.class);
+                    startActivity(i);
+                    LoginStatus=0;
+                }else if(LoginStatus==400){
+                    Toast.makeText(LoginActivity.this,"Invalid credentials",Toast.LENGTH_LONG).show();
+                    LoginStatus=0;
+                }
+                //TODO:Save token and login in without inputing account
 
-             //       Intent i = new Intent(LoginActivity.this, MainActivity.class);
-             //       startActivity(i);
-             //   }
 
-                Intent i = new Intent(LoginActivity.this, MainActivity.class);
-                startActivity(i);
+
             }
         });
 

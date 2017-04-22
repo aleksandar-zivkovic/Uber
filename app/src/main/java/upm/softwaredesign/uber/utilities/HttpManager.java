@@ -5,7 +5,6 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -34,7 +33,9 @@ public class HttpManager {
     private Context mContext;
     private HttpURLConnection httpCon;
     public static String token = "";
-    public static String RegisterStatusJson="";
+    public static String RegisterStatusJson = "";
+    public static String loginStatusJson = "";
+    public static int LoginStatus = 0;
     private Integer mTripId;
     private String mTripStatus;
     public HttpManager(Context context){
@@ -104,7 +105,9 @@ public class HttpManager {
             registerJson.put("last_name",ln);
             registerJson.put("phone_number",pn);
 
-            new RequestRegister().execute(registerJson);
+            RequestRegister requestRegister = new RequestRegister();
+            requestRegister.execute(registerJson);
+
 
 
         }
@@ -174,20 +177,16 @@ public class HttpManager {
 
                 //Read
                 int status = httpCon.getResponseCode();
-                //System.out.println("register http number:"+status);
+
                 if (status == 201) {
                     RegisterStatusJson = "Sign up Successfully!";
-                    System.out.println(RegisterStatusJson);
                 } else if (status == 403) {
                     RegisterStatusJson = "Error 403 - Email has already registered before";
-                    System.out.println(RegisterStatusJson);
                 } else if (status == 404) {
                     InputStream error = httpCon.getErrorStream();
                     RegisterStatusJson = "Error 404";
-                    System.out.println(RegisterStatusJson);
                 } else {
                     RegisterStatusJson = "Error!";
-                    System.out.println(RegisterStatusJson);
                 }
             }
             catch (Exception e) {
@@ -195,13 +194,10 @@ public class HttpManager {
             }
             return RegisterStatusJson;
         }
-        public String getStatusJson(){
-            return RegisterStatusJson;
-        }
     }
 
     public class RequestLogin extends AsyncTask {
-        String loginStatusJson = "";
+
         @Override
         protected Object doInBackground(Object[] params) {
             JSONObject jsonData = (JSONObject) params[0];
@@ -221,22 +217,20 @@ public class HttpManager {
                 os.close();
 
                 //Read
-                int status = httpCon.getResponseCode();
-                if (status == 200) {
+                LoginStatus = httpCon.getResponseCode();
+                if (LoginStatus == 200) {
                     BufferedReader buf =  new BufferedReader(new InputStreamReader(httpCon.getInputStream()));
                     token = buf.readLine();
                     //TODO:Save the token
 
 
 
-                    System.out.println("xxxxXXXX:"+token);
+                    System.out.println("The token is : "+token);
                     buf.close();
-                } else if (status == 400) {
-                    loginStatusJson = "Error 400";
-                } else if (status == 404) {
+                } else if (LoginStatus == 400) {
+                    loginStatusJson = "Error 400 - Invalid credentials";
                     InputStream error = httpCon.getErrorStream();
-                    loginStatusJson = "Error 404";
-                } else {
+                }  else {
                     loginStatusJson = "Error!";
                 }
             }

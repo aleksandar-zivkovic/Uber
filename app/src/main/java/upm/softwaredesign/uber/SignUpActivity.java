@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import upm.softwaredesign.uber.utilities.HttpManager;
+import static upm.softwaredesign.uber.utilities.HttpManager.RegisterStatusJson;
 
 public class SignUpActivity extends AppCompatActivity {
     public static String account,pw1,pw2;
@@ -17,8 +18,11 @@ public class SignUpActivity extends AppCompatActivity {
     Button goback,finishsignup;
     EditText etfn,etln,etphone;
     int flag=0;
+    int temp=0;
     public static String firstname,lastname,phonenumber;
-
+    boolean validEmail(CharSequence email){
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,16 +62,32 @@ public class SignUpActivity extends AppCompatActivity {
                     flag=1;
                     Toast toast = Toast.makeText(SignUpActivity.this, "Your passwords are not the same. Please check them!",Toast.LENGTH_LONG);
                     toast.show();
+                }else if(!validEmail(account)){
+                    flag=1;
+                    Toast toast = Toast.makeText(SignUpActivity.this, "Wrong email format!",Toast.LENGTH_LONG);
+                    toast.show();
+                }else if(pw1.length()<6){
+                    flag=1;
+                    Toast toast = Toast.makeText(SignUpActivity.this, "The min length of password must be six!",Toast.LENGTH_LONG);
+                    toast.show();
                 }
                 if(flag==0){
                     //TODO: send this json to the server.
                     HttpManager httpManager = new HttpManager(SignUpActivity.this);
                     httpManager.sendRegisteration();
+                    while(RegisterStatusJson.equals(""))
+                    {
+                        temp=1;
+                    }
+                    temp=0;
+                    if(temp==0){
+                        Intent intent = new Intent();
+                        intent.setClass(SignUpActivity.this,LoginActivity.class);
+                        startActivity(intent);
+                        Toast.makeText(SignUpActivity.this,RegisterStatusJson,Toast.LENGTH_LONG).show();
+                        RegisterStatusJson = "";
+                    }
 
-                    Intent intent = new Intent();
-                    intent.setClass(SignUpActivity.this,LoginActivity.class);
-                    startActivity(intent);
-                    Toast.makeText(SignUpActivity.this,httpManager.RegisterStatusJson,Toast.LENGTH_LONG).show();
                 }
 
             }
