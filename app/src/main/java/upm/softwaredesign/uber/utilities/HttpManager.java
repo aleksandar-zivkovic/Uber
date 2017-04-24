@@ -56,7 +56,6 @@ public class HttpManager {
         //Create JSONObject
         try{
             JSONObject cabRequestJsonObject = new JSONObject();
-            cabRequestJsonObject.put("user_id", 1); // TODO: change this value when we get more users
 
             String startLatitude = new Double(start.latitude).toString();
             String startLongitude = new Double(start.longitude).toString();
@@ -268,6 +267,7 @@ public class HttpManager {
                 httpCon.setRequestProperty("Content-Type", "application/json");
                 httpCon.setRequestProperty("Accept", "application/json");
                 httpCon.setRequestMethod("POST");
+                httpCon.setRequestProperty ("Authorization", token);
                 httpCon.connect();
 
                 //Write
@@ -291,11 +291,14 @@ public class HttpManager {
 
                     br.close();
                     tripIdJsonString = sb.toString();
+
                 } else if (status == 400) {
                     tripIdJsonString = "Error 400 while requesting a cab";
                 } else if (status == 404) {
                     InputStream error = httpCon.getErrorStream();
                     tripIdJsonString = "Error 404 while requesting a cab";
+                } else if (status == 507) {
+                    tripIdJsonString = "Response status 507: Insufficient storage -> No free cars available!";
                 } else {
                     tripIdJsonString = "Error - Something went wrong while requesting a cab";
                 }
@@ -317,101 +320,27 @@ public class HttpManager {
             }
 
             Integer tripID = -1;
+            String tripStatus = "EMPTY";
             try {
                 JSONObject tripIdJsonObject = new JSONObject(tripIdJsonString);
-                tripID = (Integer) tripIdJsonObject.get("trip_id");
+                tripID = (Integer) tripIdJsonObject.get("id");
+                tripStatus = (String) tripIdJsonObject.get("status");
             } catch (Exception e) {
                 e.printStackTrace();
             }
             //Toast.makeText(mContext, "Your trip ID is: " + tripID.toString() ,Toast.LENGTH_LONG).show();
-            mTripId = tripID;
-
-            checkTripStatus(tripID);
-
-        }
-    }
-
-    public void checkTripStatus(Integer tripID) {
-        new CheckTripStatus().execute(tripID);
-    }
-
-    private class CheckTripStatus extends AsyncTask {
-        private ProgressDialog pDialog;
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            pDialog = new ProgressDialog(mContext);
-            pDialog.setTitle("Trip status");
-            pDialog.setMessage("Checking trip status");
-            pDialog.setIndeterminate(false);
-            pDialog.setCancelable(true);
-            pDialog.show();
-        }
-
-        @Override
-        protected Object doInBackground(Object[] params) {
-
-            String tripStatusJson = "";
-            Integer tripID = (Integer) params[0];
-            String tripStatusUrl = Constants.TRIP_STATUS_URL + tripID.toString();
-
-            try {
-                httpCon = (HttpURLConnection) ((new URL(tripStatusUrl).openConnection()));
-                httpCon.setRequestMethod("GET");
-                httpCon.connect();
-                //Read
-                int status = httpCon.getResponseCode();
-                if (status == 200) {
-                    InputStream is = httpCon.getInputStream();
-                    BufferedReader br = new BufferedReader(new InputStreamReader(is));
-                    String line = null;
-                    StringBuilder sb = new StringBuilder();
-
-                    while ((line = br.readLine()) != null) {
-                        sb.append(line);
-                    }
-
-                    br.close();
-                    tripStatusJson = sb.toString();
-
-                } else if (status == 400) {
-                    tripStatusJson = "Error 400 while requesting trip status";
-                } else if (status == 404) {
-                    InputStream error = httpCon.getErrorStream();
-                    tripStatusJson = "Error 404 while requesting trip status";
-                } else {
-                    tripStatusJson = "Error - Something went wrong while requesting trip status";
-                }
-            }
-            catch (Exception e) {
-                e.getStackTrace();
-            }
-            return tripStatusJson;
-        }
-
-        @Override
-        protected void onPostExecute(Object o) {
-            pDialog.dismiss();
-            String tripStatusJson = (String) o;
-            if (tripStatusJson.contains("Error")) {
-                Toast.makeText(mContext, tripStatusJson ,Toast.LENGTH_LONG).show();
-            }
-
-            String tripStatus = "";
-            try {
-                JSONObject tripStatusJsonObject = new JSONObject(tripStatusJson);
-                tripStatus = (String) tripStatusJsonObject.get("status");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            mTripStatus = tripStatus;
             //Toast.makeText(mContext, "Your trip status is: " + tripStatus ,Toast.LENGTH_LONG).show();
+            mTripId = tripID;
+            mTripStatus = tripStatus;
+
             Intent intent = new Intent(mContext, MainActivity.class).setFlags(Constants.TRIP_STATUS_INTENT_FLAG);
             intent.putExtra(Constants.TRIP_ID, String.valueOf(mTripId));
             intent.putExtra(Constants.TRIP_STATUS, mTripStatus);
             mContext.startActivity(intent);
+
+
         }
     }
+
+
 }

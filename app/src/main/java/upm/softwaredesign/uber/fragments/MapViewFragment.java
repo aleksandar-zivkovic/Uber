@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Criteria;
@@ -17,7 +16,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
@@ -31,18 +29,15 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.vision.text.Text;
 
 import java.io.IOException;
 import java.util.List;
@@ -50,11 +45,7 @@ import java.util.Locale;
 
 import upm.softwaredesign.uber.MainActivity;
 import upm.softwaredesign.uber.R;
-import upm.softwaredesign.uber.utilities.Constants;
 import upm.softwaredesign.uber.utilities.HttpManager;
-import upm.softwaredesign.uber.utilities.ScheduledService;
-
-import static android.os.Build.VERSION_CODES.M;
 
 
 public class MapViewFragment extends Fragment implements OnMapReadyCallback,
@@ -387,10 +378,4 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
         }
     }
 
-    public void startTripStatusCheck()
-    {
-        // use this to start and trigger a service
-        Intent i= new Intent(getActivity(), ScheduledService.class);
-        getActivity().startService(i);
-    }
 }

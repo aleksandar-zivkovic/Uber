@@ -49,20 +49,14 @@ public class TripStatusDialogFragment extends DialogFragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        mTripIdTextView = (TextView) view.findViewById(R.id.trip_id_text_view);
-        mTripStatusTextView = (TextView) view.findViewById(R.id.trip_status_text_view);
-        mImageView = (ImageView) view.findViewById(trip_status_image_view);
-
         getDialog().setTitle("Trip Status Dialog");
-
+        mImageView = (ImageView) view.findViewById(trip_status_image_view);
         mImageView.setImageResource(R.mipmap.ic_launcher);
 
-        String tripID = getArguments().getString("tripID");
-        mTripIdTextView.setText(tripID);
+        mTripIdTextView = (TextView) view.findViewById(R.id.trip_id_text_view);
+        mTripStatusTextView = (TextView) view.findViewById(R.id.trip_status_text_view);
 
-        String tripStatus = getArguments().getString("tripStatus");
-        mTripStatusTextView.setText(tripStatus);
-
+        updateTripStatus();
     }
 
     @Override
@@ -82,5 +76,14 @@ public class TripStatusDialogFragment extends DialogFragment {
 
         // Call super onResume after sizing
         super.onResume();
+    }
+
+    public void updateTripStatus() {
+        String tripID = getArguments().getString("tripID");
+        mTripIdTextView.setText(tripID);
+
+        String tripStatus = getArguments().getString("tripStatus");
+        mTripStatusTextView.setText(tripStatus);
+
     }
 }

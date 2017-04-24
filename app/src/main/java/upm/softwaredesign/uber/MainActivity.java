@@ -28,9 +28,16 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 
+import org.json.JSONObject;
+
+import io.ably.lib.realtime.AblyRealtime;
+import io.ably.lib.realtime.Channel;
+import io.ably.lib.types.AblyException;
+import io.ably.lib.types.Message;
 import upm.softwaredesign.uber.fragments.MapViewFragment;
 import upm.softwaredesign.uber.fragments.SelectLocationFragment;
 import upm.softwaredesign.uber.fragments.TripStatusDialogFragment;
+import upm.softwaredesign.uber.utilities.AblyAdapter;
 import upm.softwaredesign.uber.utilities.Constants;
 
 import static android.R.attr.fragment;
@@ -45,6 +52,7 @@ public class MainActivity extends AppCompatActivity
 
     private String mTripId;
     private String mTripStatus;
+    private AblyRealtime mRealtime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,6 +130,7 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         }
+
     }
 
     public void showSelectionLocationFragment() {
@@ -160,10 +169,55 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    private void showTripStatus(String tripID, String tripStatus) {
+    private void showTripStatus(String tripID, final String tripStatus) {
         FragmentManager fm = getFragmentManager();
         TripStatusDialogFragment tripStatusDialogFragment = TripStatusDialogFragment.newInstance(tripID, tripStatus);
         tripStatusDialogFragment.show(fm, "trip_status_tag");
+
+        Toast.makeText(this, "Your trip ID is: " + tripID.toString() ,Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Your trip status is: " + tripStatus ,Toast.LENGTH_SHORT).show();
+
+        try {
+            mRealtime = new AblyRealtime(Constants.ALBY_API_KEY);
+        } catch (AblyException e) {
+            e.printStackTrace();
+        }
+        String tripChannel = "/trip/" + tripID;
+        Channel channel = mRealtime.channels.get(tripChannel);
+
+        try {
+            channel.subscribe("statusChange", new Channel.MessageListener() {
+                @Override
+                public void onMessage(final Message messages) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            //Toast.makeText(getBaseContext(), "Message received: " + messages.data, Toast.LENGTH_LONG).show();
+                            mTripStatus = messages.data.toString();
+                            //Toast.makeText(MainActivity.this, "Your trip status is: " + mTripStatus ,Toast.LENGTH_SHORT).show();
+
+                            try {
+                                JSONObject tripStatusJSONObject = new JSONObject(mTripStatus);
+                                mTripStatus = (String) tripStatusJSONObject.get("status");
+                            }
+                            catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+
+                            FragmentManager fm = getFragmentManager();
+                            TripStatusDialogFragment tripStatusDialogFragment = TripStatusDialogFragment.newInstance(mTripId, mTripStatus);
+                            tripStatusDialogFragment.show(fm, "trip_status_tag");
+                        }
+                    });
+
+                }
+            });
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
 
