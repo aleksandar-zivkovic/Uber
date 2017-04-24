@@ -39,6 +39,7 @@ import upm.softwaredesign.uber.fragments.SelectLocationFragment;
 import upm.softwaredesign.uber.fragments.TripStatusDialogFragment;
 import upm.softwaredesign.uber.utilities.AblyAdapter;
 import upm.softwaredesign.uber.utilities.Constants;
+import upm.softwaredesign.uber.utilities.HttpManager;
 
 import static android.R.attr.fragment;
 import static android.icu.lang.UCharacter.GraphemeClusterBreak.V;
@@ -159,8 +160,7 @@ public class MainActivity extends AppCompatActivity
             fm.beginTransaction().replace(R.id.content_frame, new MapViewFragment()).commit();
         } else */
         if (id == R.id.nav_logout) {
-            Intent i = new Intent(MainActivity.this, LoginActivity.class);
-            startActivity(i);
+            new HttpManager(this).sendLogout();
         } else if (id == R.id.nav_about) {
 
         }

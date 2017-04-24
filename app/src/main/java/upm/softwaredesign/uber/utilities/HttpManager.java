@@ -33,9 +33,7 @@ public class HttpManager {
     private Context mContext;
     private HttpURLConnection httpCon;
     public static String token = "";
-    public static String RegisterStatusJson = "";
-    public static String loginStatusJson = "";
-    public static int LoginStatus = 0;
+
     private Integer mTripId;
     private String mTripStatus;
     public HttpManager(Context context){
@@ -43,6 +41,276 @@ public class HttpManager {
         mContext = context;
     }
 
+    public boolean isConnected(){
+        ConnectivityManager connMgr = (ConnectivityManager) mContext.getSystemService(Activity.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+        if (networkInfo != null && networkInfo.isConnected())
+            return true;
+        else
+            return false;
+    }
+
+    public void sendRegistration(String email, String password, String firstname, String lastname, String phone){
+        if(!isConnected()){
+            new AlertDialog.Builder(mContext)
+                    .setTitle("Error !")
+                    .setMessage("No internet connection")
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+            return;
+        }
+        //Create JSONObject
+        try{
+
+            JSONObject registerJson = new JSONObject();
+            registerJson.put("email",email);
+            registerJson.put("password",password);
+            registerJson.put("first_name",firstname);
+            registerJson.put("last_name",lastname);
+            registerJson.put("phone_number",phone);
+
+            RequestRegister requestRegister = new RequestRegister();
+            requestRegister.execute(registerJson);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
+    }
+    public class RequestRegister extends AsyncTask<Object, Void, Void>{
+
+        private ProgressDialog pDialog;
+        private boolean error = false;
+        private String errorMessage = "";
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            pDialog = new ProgressDialog(mContext);
+            pDialog.setTitle("Sign-up");
+            pDialog.setMessage("Creating your account...");
+            pDialog.setIndeterminate(false);
+            pDialog.setCancelable(true);
+            pDialog.show();
+        }
+
+        @Override
+        public Void doInBackground(Object[] params) {
+
+            JSONObject jsonData = (JSONObject) params[0];
+            try {
+                httpCon = (HttpURLConnection) ((new URL (Constants.Register_URL).openConnection()));
+                httpCon.setDoOutput(true);
+                httpCon.setRequestProperty("Content-Type", "application/json");
+                httpCon.setRequestProperty("Accept", "application/json");
+                httpCon.setRequestMethod("POST");
+                httpCon.connect();
+
+                //Write
+                OutputStream os = httpCon.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+                writer.write(jsonData.toString());
+                writer.close();
+                os.close();
+
+                //Read
+                int status = httpCon.getResponseCode();
+
+                switch (status){
+                    case 201:
+                        System.out.println("Successfully created !");
+                        break;
+                    case 403:
+                        error = true;
+                        errorMessage = "Error 403 - Email has already registered before";
+                        break;
+                    case 404:
+                        error = true;
+                        errorMessage = "Error 404";
+                        break;
+                    default:
+                        error = true;
+                        errorMessage = "Error "+status+" - Unknown Error";
+                }
+            }
+            catch (Exception e) {
+                e.getStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void v) {
+            pDialog.dismiss();
+            if (error) {
+                Toast.makeText(mContext, errorMessage, Toast.LENGTH_LONG).show();
+            } else {
+                ((Activity)mContext).finish();
+            }
+        }
+    }
+
+    public void sendLogin(String email, String password){
+
+        if(!isConnected()){
+            new AlertDialog.Builder(mContext)
+                    .setTitle("Error !")
+                    .setMessage("No internet connection")
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+            return;
+        }
+        //Create JSONObject
+        try{
+            JSONObject loginJson = new JSONObject();
+            loginJson.put("email",email);
+            loginJson.put("password",password);
+
+            new RequestLogin().execute(loginJson);
+
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
+    }
+    public class RequestLogin extends AsyncTask<Object, Void, Void>{
+        private ProgressDialog pDialog;
+        boolean error = false;
+        String errorMessage = "";
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            pDialog = new ProgressDialog(mContext);
+            pDialog.setTitle("Connecting");
+            pDialog.setMessage("Logging in...");
+            pDialog.setIndeterminate(false);
+            pDialog.setCancelable(true);
+            pDialog.show();
+        }
+
+        @Override
+        protected Void doInBackground(Object[] params) {
+            JSONObject jsonData = (JSONObject) params[0];
+            try {
+                httpCon = (HttpURLConnection) ((new URL(Constants.Login_URL).openConnection()));
+                httpCon.setDoOutput(true);
+                httpCon.setRequestProperty("Content-Type", "application/json");
+                httpCon.setRequestMethod("POST");
+                httpCon.connect();
+
+                OutputStream os = httpCon.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+                writer.write(jsonData.toString());
+                writer.close();
+                os.close();
+
+                //Read
+                int loginStatus = httpCon.getResponseCode();
+                if (loginStatus == 200) {
+                    BufferedReader buf = new BufferedReader(new InputStreamReader(httpCon.getInputStream()));
+                    token = buf.readLine();
+                    System.out.println("The token is : " + token);
+                    buf.close();
+                } else if (loginStatus == 400) {
+                    error = true;
+                    errorMessage = "Error 400 - Incorrect creditentials";
+                } else {
+                    error = true;
+                    errorMessage = "Error !";
+                }
+            } catch (Exception e) {
+                e.getStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void v) {
+            pDialog.dismiss();
+            if (error) {
+                Toast.makeText(mContext, errorMessage, Toast.LENGTH_LONG).show();
+            } else {
+                LoginActivity.loginInstance.saveToken(token);
+                mContext.startActivity(new Intent(mContext, MainActivity.class));
+            }
+        }
+    }
+
+    public void sendLogout(){
+        new RequestLogout().execute();
+    }
+    public class RequestLogout extends AsyncTask<Void, Void, Void>{
+
+        private ProgressDialog pDialog;
+        private boolean error = false;
+        private String errorMessage = "";
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            pDialog = new ProgressDialog(mContext);
+            pDialog.setTitle("Logging out");
+            pDialog.setMessage("Disconnecting...");
+            pDialog.setIndeterminate(false);
+            pDialog.setCancelable(true);
+            pDialog.show();
+        }
+
+        @Override
+        public Void doInBackground(Void... params) {
+            try {
+                httpCon = (HttpURLConnection) ((new URL (Constants.Logout_URL).openConnection()));
+                //httpCon.setDoOutput(true);
+                httpCon.setRequestProperty("Content-Type", "application/json");
+                httpCon.setRequestProperty("Authorization", token);
+                //httpCon.setRequestProperty("Accept", "application/json");
+                httpCon.setRequestMethod("POST");
+                httpCon.connect();
+
+                /*Write
+                OutputStream os = httpCon.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+                writer.write(jsonData.toString());
+                writer.close();
+                os.close();*/
+
+                //Read
+                int status = httpCon.getResponseCode();
+
+                switch (status){
+                    case 200:
+                        System.out.println("Logout Successful");
+                        LoginActivity.loginInstance.saveToken("");
+                        break;
+                    case 401:
+                        error = true;
+                        errorMessage = "Error 401 - Unauthorized (user not logged in)";
+                        break;
+                    default:
+                        error = true;
+                        errorMessage = "Error "+status+" - Unknown Error";
+                }
+            }
+            catch (Exception e) {
+                e.getStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void v) {
+            pDialog.dismiss();
+            if (error) {
+                Toast.makeText(mContext, errorMessage, Toast.LENGTH_LONG).show();
+            }
+            else {
+                ((Activity)mContext).finish();
+            }
+        }
+    }
+    
     public void sendPosition(LatLng start, LatLng destination){
 
         if(!isConnected()){
@@ -80,167 +348,6 @@ public class HttpManager {
         }
 
     }
-    public void sendRegisteration(){
-        if(!isConnected()){
-            new AlertDialog.Builder(mContext)
-                    .setTitle("Error !")
-                    .setMessage("No internet connection")
-                    .setIcon(android.R.drawable.ic_dialog_alert)
-                    .show();
-            return;
-        }
-        //Create JSONObject
-        try{
-            String email = SignUpActivity.account;
-            String password = SignUpActivity.pw1;
-            String fn = SignUpActivity.firstname;
-            String ln = SignUpActivity.lastname;
-            String pn = SignUpActivity.phonenumber;
-
-            JSONObject registerJson = new JSONObject();
-            registerJson.put("email",email);
-            registerJson.put("password",password);
-            registerJson.put("first_name",fn);
-            registerJson.put("last_name",ln);
-            registerJson.put("phone_number",pn);
-
-            RequestRegister requestRegister = new RequestRegister();
-            requestRegister.execute(registerJson);
-
-
-
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-
-    }
-    public void sendLogin(){
-
-        if(!isConnected()){
-            new AlertDialog.Builder(mContext)
-                    .setTitle("Error !")
-                    .setMessage("No internet connection")
-                    .setIcon(android.R.drawable.ic_dialog_alert)
-                    .show();
-            return;
-        }
-        //Create JSONObject
-        try{
-            String em = LoginActivity.login_account;
-            String ep = LoginActivity.login_password;
-
-            JSONObject loginJson = new JSONObject();
-            loginJson.put("email",em);
-            loginJson.put("password",ep);
-
-            new RequestLogin().execute(loginJson);
-
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-
-    }
-    public boolean isConnected(){
-        ConnectivityManager connMgr = (ConnectivityManager) mContext.getSystemService(Activity.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected())
-            return true;
-        else
-            return false;
-    }
-    public class RequestRegister extends AsyncTask {
-
-       // private ProgressDialog pDialog;
-        @Override
-        public Object doInBackground(Object[] params) {
-
-
-            JSONObject jsonData = (JSONObject) params[0];
-
-            try {
-                httpCon = (HttpURLConnection) ((new URL (Constants.Register_URL).openConnection()));
-                httpCon.setDoOutput(true);
-                httpCon.setRequestProperty("Content-Type", "application/json");
-                httpCon.setRequestProperty("Accept", "application/json");
-                httpCon.setRequestMethod("POST");
-                httpCon.connect();
-
-                //Write
-                OutputStream os = httpCon.getOutputStream();
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-                writer.write(jsonData.toString());
-                writer.close();
-                os.close();
-
-                //Read
-                int status = httpCon.getResponseCode();
-
-                if (status == 201) {
-                    RegisterStatusJson = "Sign up Successfully!";
-                } else if (status == 403) {
-                    RegisterStatusJson = "Error 403 - Email has already registered before";
-                } else if (status == 404) {
-                    InputStream error = httpCon.getErrorStream();
-                    RegisterStatusJson = "Error 404";
-                } else {
-                    RegisterStatusJson = "Error!";
-                }
-            }
-            catch (Exception e) {
-                e.getStackTrace();
-            }
-            return RegisterStatusJson;
-        }
-    }
-
-    public class RequestLogin extends AsyncTask {
-
-        @Override
-        protected Object doInBackground(Object[] params) {
-            JSONObject jsonData = (JSONObject) params[0];
-            try {
-                httpCon = (HttpURLConnection) ((new URL (Constants.Login_URL).openConnection()));
-                httpCon.setDoOutput(true);
-                httpCon.setRequestProperty("Content-Type", "application/json");
-                //httpCon.setRequestProperty("Accept", "application/json");
-                httpCon.setRequestMethod("POST");
-                //httpCon.setRequestProperty("Authorization", token);
-                httpCon.connect();
-
-                OutputStream os = httpCon.getOutputStream();
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-                writer.write(jsonData.toString());
-                writer.close();
-                os.close();
-
-                //Read
-                LoginStatus = httpCon.getResponseCode();
-                if (LoginStatus == 200) {
-                    BufferedReader buf =  new BufferedReader(new InputStreamReader(httpCon.getInputStream()));
-                    token = buf.readLine();
-                    //TODO:Save the token
-
-
-
-                    System.out.println("The token is : "+token);
-                    buf.close();
-                } else if (LoginStatus == 400) {
-                    loginStatusJson = "Error 400 - Invalid credentials";
-                    InputStream error = httpCon.getErrorStream();
-                }  else {
-                    loginStatusJson = "Error!";
-                }
-            }
-            catch (Exception e) {
-                e.getStackTrace();
-            }
-            return loginStatusJson;
-        }
-     }
-
-
     private class RequestCab extends AsyncTask {
         private ProgressDialog pDialog;
 

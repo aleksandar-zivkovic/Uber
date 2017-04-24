@@ -1,67 +1,66 @@
 package upm.softwaredesign.uber;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import upm.softwaredesign.uber.utilities.HttpManager;
 
-import static upm.softwaredesign.uber.utilities.HttpManager.LoginStatus;
-import static upm.softwaredesign.uber.utilities.HttpManager.RegisterStatusJson;
-import static upm.softwaredesign.uber.utilities.HttpManager.loginStatusJson;
-
 public class LoginActivity extends AppCompatActivity {
-    EditText etaccount,etpassword;
-    public static String login_account,login_password;
-    int temp=0;
+
+    public static LoginActivity loginInstance;
+    private String token = "";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        loginInstance = this;
 
-        //added onclick listener for profile name
-        View loginButton = findViewById(R.id.login_login_button);
-        etaccount = (EditText)findViewById(R.id.login_email);
-        etpassword = (EditText)findViewById(R.id.login_password);
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                login_account = etaccount.getText().toString();
-                login_password = etpassword.getText().toString();
-                HttpManager httpManager = new HttpManager(LoginActivity.this);
-                httpManager.sendLogin();
+        loadToken();
+        if(!token.equals(""))
+            startActivity(new Intent(this, MainActivity.class));
+    }
 
-                while(LoginStatus==0)
-                {
-                    temp=1;
-                }
-                if(LoginStatus==200){
-                    Intent i = new Intent(LoginActivity.this, MainActivity.class);
-                    startActivity(i);
-                    LoginStatus=0;
-                }else if(LoginStatus==400){
-                    Toast.makeText(LoginActivity.this,"Invalid credentials",Toast.LENGTH_LONG).show();
-                    LoginStatus=0;
-                }
-                //TODO:Save token and login in without inputing account
+    public void loginClicked(View view){
+        String email = ((TextView)findViewById(R.id.login_email)).getText().toString();
+        String password = ((TextView)findViewById(R.id.login_password)).getText().toString();
+        if(!validEmail(email)){
+            Toast.makeText(this, "Enter a valid email address", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
+        HttpManager httpManager = new HttpManager(LoginActivity.this);
+        httpManager.sendLogin(email, password);
+    }
 
+    public void signUpClicked(View view){
+        startActivity(new Intent(this, SignUpActivity.class));
+    }
 
-            }
-        });
+    // load the token from the device
+    public void loadToken(){
+        SharedPreferences mPrefs = getSharedPreferences("data", 0);
+        this.token = mPrefs.getString("token", "");
+        HttpManager.token = this.token;
+        System.out.println("loadingToken = "+this.token);
+    }
 
-        //added onclick listener for sign up button
-        View signUpButton = findViewById(R.id.login_signup_button);
-        signUpButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+    // save the token to the device
+    public void saveToken(String token){
+        this.token = token;
+        SharedPreferences mPrefs = getSharedPreferences("data", 0);
+        SharedPreferences.Editor mEditor = mPrefs.edit();
+        mEditor.putString("token", token).commit();
+        System.out.println("savingToken = "+this.token);
+    }
 
-                Intent i = new Intent(LoginActivity.this, SignUpActivity.class);
-                startActivity(i);
-            }
-        });
+    boolean validEmail(CharSequence email){
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
     }
 }
