@@ -49,7 +49,8 @@ public class TripStatusDialogFragment extends DialogFragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        getDialog().setTitle("Trip Status Dialog");
+       // getDialog().setTitle("Trip Status Dialog");
+        getDialog().requestWindowFeature(Window.FEATURE_NO_TITLE);
         mImageView = (ImageView) view.findViewById(trip_status_image_view);
         mImageView.setImageResource(R.mipmap.ic_launcher);
 
@@ -71,8 +72,9 @@ public class TripStatusDialogFragment extends DialogFragment {
         display.getSize(size);
 
         // Set the width of the dialog proportional to 75% of the screen width
-        window.setLayout((int) (size.x * 0.75), WindowManager.LayoutParams.WRAP_CONTENT);
-        window.setGravity(Gravity.CENTER);
+        window.setLayout((int) (size.x * 0.8), (int) (size.y * 0.15));
+        window.setGravity(Gravity.LEFT|Gravity.BOTTOM);
+
 
         // Call super onResume after sizing
         super.onResume();

@@ -174,8 +174,8 @@ public class MainActivity extends AppCompatActivity
         TripStatusDialogFragment tripStatusDialogFragment = TripStatusDialogFragment.newInstance(tripID, tripStatus);
         tripStatusDialogFragment.show(fm, "trip_status_tag");
 
-        Toast.makeText(this, "Your trip ID is: " + tripID.toString() ,Toast.LENGTH_SHORT).show();
-        Toast.makeText(this, "Your trip status is: " + tripStatus ,Toast.LENGTH_SHORT).show();
+      //  Toast.makeText(this, "Your trip ID is: " + tripID.toString() ,Toast.LENGTH_SHORT).show();
+       // Toast.makeText(this, "Your trip status is: " + tripStatus ,Toast.LENGTH_SHORT).show();
 
         try {
             mRealtime = new AblyRealtime(Constants.ALBY_API_KEY);
