@@ -1,5 +1,6 @@
 package upm.softwaredesign.uber;
 
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -18,10 +19,8 @@ public class SignUpActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
 
-        ((Button)findViewById(R.id.signup_back_button)).setOnClickListener(new View.OnClickListener() {
-            @Override
+        ((FloatingActionButton)findViewById(R.id.signup_back_button_bar)).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                System.out.println("Back");
                 finish();
             }
         });
