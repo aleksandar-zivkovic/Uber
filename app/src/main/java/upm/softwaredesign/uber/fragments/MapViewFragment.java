@@ -62,6 +62,7 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
 
     private Marker startMarker;
     private Marker destinationMarker;
+    private Marker mCarMarker;
 
     private String mStartAddress;
     private String mDestinationAddress;
@@ -75,7 +76,7 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
         FREE,
         REQUESTED,
         ACTIVE,
-        FINISHED
+        ENDED
     }
 
     TripStatus mTripStatus;
@@ -376,6 +377,22 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback,
                     .build();                   // Creates a CameraPosition from the builder
             mGoogleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
         }
+    }
+
+    public void updateCarMarkerOnMap(Double currentCarLocationLatitude, Double currentCarLocationLongitude) {
+        // remove Marker from old location
+        if (mCarMarker != null) {
+            mCarMarker.remove();
+        }
+        // add Marker to new location
+        LatLng mCarLatLng = new LatLng(currentCarLocationLatitude, currentCarLocationLongitude);
+        MarkerOptions options = new MarkerOptions();
+        options.position(mCarLatLng);
+        options.title("Car");
+        //options.icon(BitmapDescriptorFactory.fromResource(R.drawable.car));
+        options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW));
+        mCarMarker = mGoogleMap.addMarker(options);
+
     }
 
 }

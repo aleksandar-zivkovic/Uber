@@ -35,6 +35,7 @@ public class HttpManager {
     public static String token = "";
 
     private Integer mTripId;
+    private String mCarId;
     private String mTripStatus;
     public HttpManager(Context context){
 
@@ -50,7 +51,7 @@ public class HttpManager {
             return false;
     }
 
-    public void sendRegistration(String email, String password, String firstname, String lastname, String phone){
+    public void sendRegistration(String email, String password, String firstname, String lastname, String phone) {
         if(!isConnected()){
             new AlertDialog.Builder(mContext)
                     .setTitle("Error !")
@@ -427,10 +428,15 @@ public class HttpManager {
             }
 
             Integer tripID = -1;
+            String carID = "-1AAA";
             String tripStatus = "EMPTY";
             try {
                 JSONObject tripIdJsonObject = new JSONObject(tripIdJsonString);
                 tripID = (Integer) tripIdJsonObject.get("id");
+
+                JSONObject carJsonObject = (JSONObject) tripIdJsonObject.get("car");
+                carID = (String) carJsonObject.get("id");
+
                 tripStatus = (String) tripIdJsonObject.get("status");
             } catch (Exception e) {
                 e.printStackTrace();
@@ -438,11 +444,13 @@ public class HttpManager {
             //Toast.makeText(mContext, "Your trip ID is: " + tripID.toString() ,Toast.LENGTH_LONG).show();
             //Toast.makeText(mContext, "Your trip status is: " + tripStatus ,Toast.LENGTH_LONG).show();
             mTripId = tripID;
+            mCarId = carID;
             mTripStatus = tripStatus;
 
             Intent intent = new Intent(mContext, MainActivity.class).setFlags(Constants.TRIP_STATUS_INTENT_FLAG);
             intent.putExtra(Constants.TRIP_ID, String.valueOf(mTripId));
             intent.putExtra(Constants.TRIP_STATUS, mTripStatus);
+            intent.putExtra(Constants.CAR_ID, mCarId);
             mContext.startActivity(intent);
 
 

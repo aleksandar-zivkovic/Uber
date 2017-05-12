@@ -1,13 +1,10 @@
 package upm.softwaredesign.uber;
 
 import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -17,16 +14,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 
 import org.json.JSONObject;
 
@@ -37,21 +25,24 @@ import io.ably.lib.types.Message;
 import upm.softwaredesign.uber.fragments.MapViewFragment;
 import upm.softwaredesign.uber.fragments.SelectLocationFragment;
 import upm.softwaredesign.uber.fragments.TripStatusDialogFragment;
-import upm.softwaredesign.uber.utilities.AblyAdapter;
 import upm.softwaredesign.uber.utilities.Constants;
 import upm.softwaredesign.uber.utilities.HttpManager;
 
-import static android.R.attr.fragment;
-import static android.icu.lang.UCharacter.GraphemeClusterBreak.V;
 import static upm.softwaredesign.uber.R.id.nav_view;
-import static upm.softwaredesign.uber.R.id.textView;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, SelectLocationFragment.OnFragmentInteractionListener {
 
     private SelectLocationFragment mSelectLocationFragment;
+    private MapViewFragment mMapViewFratment;
+    private FloatingActionButton mFloatingActionButton;
+
+    private boolean requestedTripInProgress;
+    private Double currentCarLocationLatitude;
+    private Double currentCarLocationLongitude;
 
     private String mTripId;
+    private String mCarId;
     private String mTripStatus;
     private AblyRealtime mRealtime;
 
@@ -61,6 +52,9 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        requestedTripInProgress = false;
+        mFloatingActionButton   = (FloatingActionButton) findViewById(R.id.fab);
 
         final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -73,11 +67,14 @@ public class MainActivity extends AppCompatActivity
 
         FragmentManager fm = getFragmentManager();
         mSelectLocationFragment = new SelectLocationFragment();
-        fm.beginTransaction().replace(R.id.content_frame, new MapViewFragment()).commit();
+        mMapViewFratment = new MapViewFragment();
+        fm.beginTransaction().replace(R.id.content_frame, mMapViewFratment).commit();
         fm.beginTransaction()
                 .add(R.id.main_layout, mSelectLocationFragment, "select location fragment")
                 .show(mSelectLocationFragment)
                 .commit();
+
+
 
         FloatingActionButton menu = (FloatingActionButton)findViewById(R.id.floating_button_menu);
         menu.setOnClickListener(new View.OnClickListener() {
@@ -127,6 +124,7 @@ public class MainActivity extends AppCompatActivity
                 if (bundle != null) {
                     mTripId = bundle.getString(Constants.TRIP_ID);
                     mTripStatus = bundle.getString(Constants.TRIP_STATUS);
+                    mCarId = bundle.getString(Constants.CAR_ID);
                     showTripStatus(mTripId, mTripStatus);
                 }
             }
@@ -170,21 +168,28 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void showTripStatus(String tripID, final String tripStatus) {
+
         FragmentManager fm = getFragmentManager();
-        TripStatusDialogFragment tripStatusDialogFragment = TripStatusDialogFragment.newInstance(tripID, tripStatus);
+        final TripStatusDialogFragment tripStatusDialogFragment = TripStatusDialogFragment.newInstance(tripID, tripStatus);
         tripStatusDialogFragment.show(fm, "trip_status_tag");
 
-        Toast.makeText(this, "Your trip ID is: " + tripID.toString() ,Toast.LENGTH_SHORT).show();
-        Toast.makeText(this, "Your trip status is: " + tripStatus ,Toast.LENGTH_SHORT).show();
+        if (tripStatus.equalsIgnoreCase("new")) {
+            requestedTripInProgress = true;
+            mFloatingActionButton.hide();
+        }
+
+        //Toast.makeText(this, "Your trip ID is: " + tripID.toString() ,Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "Your trip status is: " + tripStatus ,Toast.LENGTH_SHORT).show();
 
         try {
             mRealtime = new AblyRealtime(Constants.ALBY_API_KEY);
         } catch (AblyException e) {
             e.printStackTrace();
         }
+
+        // TRIP STATUS CHANNEL
         String tripChannel = "/trip/" + tripID;
         Channel channel = mRealtime.channels.get(tripChannel);
-
         try {
             channel.subscribe("statusChange", new Channel.MessageListener() {
                 @Override
@@ -199,15 +204,51 @@ public class MainActivity extends AppCompatActivity
                             try {
                                 JSONObject tripStatusJSONObject = new JSONObject(mTripStatus);
                                 mTripStatus = (String) tripStatusJSONObject.get("status");
+                                if (mTripStatus.equalsIgnoreCase("ended") ) {
+                                    requestedTripInProgress = false;
+                                    mFloatingActionButton.show();
+                                }
                             }
                             catch (Exception e) {
                                 e.printStackTrace();
                             }
 
+                            tripStatusDialogFragment.updateTripStatus(mTripStatus);
+                        }
+                    });
 
-                            FragmentManager fm = getFragmentManager();
-                            TripStatusDialogFragment tripStatusDialogFragment = TripStatusDialogFragment.newInstance(mTripId, mTripStatus);
-                            tripStatusDialogFragment.show(fm, "trip_status_tag");
+                }
+            });
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // CAR LOCATION CHANNEL
+        String carChannelName = "/car/" + mCarId;
+        Channel carChannel = mRealtime.channels.get(carChannelName);
+        try {
+            carChannel.subscribe("locationChange", new Channel.MessageListener() {
+                @Override
+                public void onMessage(final Message messages) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            String carLocationJson = messages.data.toString();
+                            try {
+                                JSONObject carLocationJsonObject = new JSONObject(carLocationJson);
+                                currentCarLocationLatitude = (Double) carLocationJsonObject.get("lat");
+                                currentCarLocationLongitude = (Double) carLocationJsonObject.get("lon");
+                            }
+                            catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                            Toast.makeText(MainActivity.this, "Car latitude: " + currentCarLocationLatitude + "\n" +
+                                    "Car longitude: " + currentCarLocationLongitude,Toast.LENGTH_SHORT).show();
+
+                            mMapViewFratment.updateCarMarkerOnMap(currentCarLocationLatitude, currentCarLocationLongitude);
+
                         }
                     });
 
@@ -219,7 +260,6 @@ public class MainActivity extends AppCompatActivity
         }
 
     }
-
 
     @Override
     public void onFragmentInteraction(Uri uri) {

@@ -56,7 +56,11 @@ public class TripStatusDialogFragment extends DialogFragment {
         mTripIdTextView = (TextView) view.findViewById(R.id.trip_id_text_view);
         mTripStatusTextView = (TextView) view.findViewById(R.id.trip_status_text_view);
 
-        updateTripStatus();
+        String tripID = getArguments().getString("tripID");
+        mTripIdTextView.setText(tripID);
+
+        String tripStatus = getArguments().getString("tripStatus");
+        mTripStatusTextView.setText(tripStatus);
     }
 
     @Override
@@ -78,12 +82,7 @@ public class TripStatusDialogFragment extends DialogFragment {
         super.onResume();
     }
 
-    public void updateTripStatus() {
-        String tripID = getArguments().getString("tripID");
-        mTripIdTextView.setText(tripID);
-
-        String tripStatus = getArguments().getString("tripStatus");
+    public void updateTripStatus(String tripStatus) {
         mTripStatusTextView.setText(tripStatus);
-
     }
 }
