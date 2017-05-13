@@ -23,8 +23,10 @@ public class LoginActivity extends AppCompatActivity {
         loginInstance = this;
 
         loadToken();
-        if(!token.equals(""))
+        if(!token.equals("")) {
             startActivity(new Intent(this, MainActivity.class));
+            new HttpManager(this).requestUserInfo();
+        }
     }
 
     public void loginClicked(View view){

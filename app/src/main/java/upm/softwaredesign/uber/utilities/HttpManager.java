@@ -8,8 +8,11 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.util.Log;
 import android.widget.Toast;
 import com.google.android.gms.maps.model.LatLng;
+
+import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -22,7 +25,12 @@ import java.net.URL;
 
 import upm.softwaredesign.uber.LoginActivity;
 import upm.softwaredesign.uber.MainActivity;
+import upm.softwaredesign.uber.ProfileActivity;
 import upm.softwaredesign.uber.SignUpActivity;
+
+import static android.R.attr.fitsSystemWindows;
+import static android.R.attr.password;
+import static upm.softwaredesign.uber.R.id.profile_name;
 
 /**
  * Created by Aleksandar on 12/03/2017.
@@ -214,6 +222,7 @@ public class HttpManager {
                     token = buf.readLine();
                     System.out.println("The token is : " + token);
                     buf.close();
+                    requestUserInfo();
                 } else if (loginStatus == 400) {
                     error = true;
                     errorMessage = "Error 400 - Incorrect creditentials";
@@ -457,5 +466,96 @@ public class HttpManager {
         }
     }
 
+    public void requestUserInfo(){
+
+        if(!isConnected()){
+            new AlertDialog.Builder(mContext)
+                    .setTitle("Error !")
+                    .setMessage("No internet connection")
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+            return;
+        }
+        try{
+            new RequestUserInfo().execute();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
+    }
+
+    public class RequestUserInfo extends AsyncTask<Object, Void, Void>{
+        private ProgressDialog pDialog;
+        boolean error = false;
+        String errorMessage = "";
+        JSONObject jsonObject = null;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            pDialog = new ProgressDialog(mContext);
+            pDialog.setTitle("Connecting");
+            pDialog.setMessage("Logging in...");
+            pDialog.setIndeterminate(false);
+            pDialog.setCancelable(true);
+            pDialog.show();
+        }
+
+        @Override
+        protected Void doInBackground(Object[] params) {
+            try {
+                httpCon = (HttpURLConnection) ((new URL(Constants.UserInfo_URL).openConnection()));
+                httpCon.setDoOutput(true);
+                httpCon.setRequestProperty("Content-Type", "application/json");
+                httpCon.setRequestProperty("Authorization", token);
+                httpCon.setRequestMethod("GET");
+                httpCon.connect();
+
+                //Read
+                int getUserInfoStatus = httpCon.getResponseCode();
+                if (getUserInfoStatus == 200) {
+                    BufferedReader buf = new BufferedReader(new InputStreamReader(httpCon.getInputStream()));
+                    StringBuilder sb = new StringBuilder();
+                    String line = null;
+                    while ((line = buf.readLine()) != null)
+                    {
+                        sb.append(line + "\n");
+                    }
+                    buf.close();
+                    jsonObject = new JSONObject(sb.toString());
+                } else if (getUserInfoStatus == 401) {
+                    error = true;
+                    errorMessage = "Error 401 - Unauthorized (user was not logged in.)";
+                } else {
+                    error = true;
+                    errorMessage = "Error !";
+                }
+            } catch (Exception e) {
+                e.getStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void v) {
+            pDialog.dismiss();
+            try {
+                if (error) {
+                    Toast.makeText(mContext, errorMessage, Toast.LENGTH_LONG).show();
+                } else {
+
+                        String firstName = jsonObject.getString("first_name");
+                        String lastName = jsonObject.getString("last_name");
+                        String email = jsonObject.getString("email");
+
+                    if(ProfileActivity.profileInstance!=null) ProfileActivity.profileInstance.showUserInfo(firstName, lastName, email);
+                    MainActivity.mainInstance.showAccountName(firstName, lastName);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 }

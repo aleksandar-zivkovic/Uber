@@ -15,6 +15,7 @@ public class Constants {
     public static final String Register_URL = SERVER_URL+"api/user/register";
     public static final String Login_URL = SERVER_URL+"api/user/login";
     public static final String Logout_URL = SERVER_URL+ "api/user/logout";
+    public static final String UserInfo_URL = SERVER_URL+"api/user/userinfo";
 
     public static final Integer TRIP_STATUS_INTENT_FLAG = 999;
     public static final String TRIP_ID = "tripID";

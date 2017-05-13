@@ -10,17 +10,30 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import upm.softwaredesign.uber.utilities.HttpManager;
+
+import static android.icu.lang.UCharacter.GraphemeClusterBreak.V;
 
 public class ProfileActivity extends AppCompatActivity {
 
+    public static ProfileActivity profileInstance;
     private static final int PICK_IMAGE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
+        profileInstance = this;
+
+        if(!HttpManager.token.equals("")) new HttpManager(this).requestUserInfo();
 
         //added onclick listener for save button
         View saveButton = findViewById(R.id.edit_profile_save);
@@ -92,5 +105,18 @@ public class ProfileActivity extends AppCompatActivity {
                     //Now do whatever processing you want to do on it.
                 }
         }
+    }
+
+    public void showUserInfo(String firstName, String lastName, String email) {
+
+        EditText profile_name = (EditText)findViewById(R.id.edit_profile_name);
+        profile_name.setText(firstName);
+
+        EditText profile_lastname = (EditText)findViewById(R.id.edit_profile_last_name);
+        profile_lastname.setText(lastName);
+
+        EditText profile_email = (EditText)findViewById(R.id.edit_profile_email);
+        profile_email.setText(email);
+
     }
 }

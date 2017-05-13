@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -14,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONObject;
@@ -33,9 +35,11 @@ import static upm.softwaredesign.uber.R.id.nav_view;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, SelectLocationFragment.OnFragmentInteractionListener {
 
+    public static MainActivity mainInstance;
     private SelectLocationFragment mSelectLocationFragment;
     private MapViewFragment mMapViewFratment;
     private FloatingActionButton mFloatingActionButton;
+    private NavigationView navigationView;
 
     private boolean requestedTripInProgress;
     private Double currentCarLocationLatitude;
@@ -50,6 +54,9 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mainInstance = this;
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -62,7 +69,7 @@ public class MainActivity extends AppCompatActivity
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        final NavigationView navigationView = (NavigationView) findViewById(nav_view);
+        navigationView = (NavigationView) findViewById(nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         FragmentManager fm = getFragmentManager();
@@ -165,6 +172,12 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public void showAccountName(String firstName,String lastName) {
+        View header = navigationView.getHeaderView(0);
+        TextView nav_name = (TextView)header.findViewById(R.id.profile_name);
+        nav_name.setText(firstName+" "+lastName);
     }
 
     private void showTripStatus(String tripID, final String tripStatus) {
