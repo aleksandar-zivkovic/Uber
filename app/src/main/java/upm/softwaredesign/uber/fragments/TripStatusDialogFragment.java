@@ -42,6 +42,7 @@ public class TripStatusDialogFragment extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        this.setCancelable(false);
         return inflater.inflate(R.layout.fragment_trip_status, container);
     }
 
@@ -50,7 +51,7 @@ public class TripStatusDialogFragment extends DialogFragment {
         super.onViewCreated(view, savedInstanceState);
 
        // getDialog().setTitle("Trip Status Dialog");
-        getDialog().requestWindowFeature(Window.FEATURE_NO_TITLE);
+
         mImageView = (ImageView) view.findViewById(trip_status_image_view);
         mImageView.setImageResource(R.mipmap.ic_launcher);
 
@@ -62,6 +63,22 @@ public class TripStatusDialogFragment extends DialogFragment {
 
         String tripStatus = getArguments().getString("tripStatus");
         mTripStatusTextView.setText(tripStatus);
+
+        getDialog().requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getView().post(new Runnable() {
+
+            @Override
+            public void run() {
+
+                Window dialogWindow = getDialog().getWindow();
+
+                // Make the dialog possible to be outside touch
+                dialogWindow.setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL);
+                dialogWindow.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+                getView().invalidate();
+            }
+        });
     }
 
     @Override
