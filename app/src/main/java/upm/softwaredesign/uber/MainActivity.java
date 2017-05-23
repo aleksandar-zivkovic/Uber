@@ -250,8 +250,11 @@ public class MainActivity extends AppCompatActivity
                             String carLocationJson = messages.data.toString();
                             try {
                                 JSONObject carLocationJsonObject = new JSONObject(carLocationJson);
-                                currentCarLocationLatitude = (Double) carLocationJsonObject.get("lat");
-                                currentCarLocationLongitude = (Double) carLocationJsonObject.get("lon");
+                                String lat = (String) carLocationJsonObject.get("lat");
+                                String lon = (String) carLocationJsonObject.get("lon");
+
+                                currentCarLocationLatitude = Double.valueOf(lat);
+                                currentCarLocationLongitude = Double.valueOf(lon);
                             }
                             catch (Exception e) {
                                 e.printStackTrace();
